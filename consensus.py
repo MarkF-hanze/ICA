@@ -49,6 +49,29 @@ def load_data(load_directory,
     group_columns[f'big'] = list(all_data.columns)
     return small_df, all_data, group_columns
 
+def load_cancer_type(load_directory,
+              big_path='/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
+                       'ica_independent_components_consensus.tsv'):
+    small_df = []
+    group_columns = {}
+    for cancer_type in os.scandir(load_directory):
+        if 'All_Cancer' not in cancer_type.path:
+            for entry in os.scandir(cancer_type):
+                if 'ICARUN' in entry.path:
+                    for file in os.scandir(entry):
+                        if 'ica_independent_components_consensus.tsv' in file.path:
+                            i = cancer_type.path.split('/')[-1].replace('_',' ')
+                            df = pd.read_csv(file.path, sep='\t', index_col=0)
+                            print(f"Number of components split {i}: {df.shape[1]}")
+                            df.columns = [f'{x}_{i}' for x in df.columns]
+                            group_columns[f'{i}'] = list(df.columns)
+                            small_df.append(df)
+    all_data = pd.read_csv(
+        big_path, sep='\t', index_col=0)
+    print(f'Number of components All data: {all_data.shape[1]}')
+    all_data.columns = [f'{x}_big' for x in all_data.columns]
+    group_columns[f'big'] = list(all_data.columns)
+    return small_df, all_data, group_columns
 
 def calculate_correlation(df1, df2):
     correlation = pd.DataFrame(columns=df1.columns, index=df2.columns)
@@ -169,7 +192,7 @@ def make_negative(vector):
 def do_nothing(vector):
     return vector
 
-
+#TODO dit gaat fout voor cancer types
 def merge_clusters(df, clusters):
     xs = []
     ys = []
@@ -269,7 +292,7 @@ def create_fakes(nodes, lines, fake_count):
 def citrus_plot(correlation):
     output_file(filename=f"citrusPlot.html")
     # Remove diagonal and values smaller than cutoff
-    correlation.values[[np.arange(correlation.shape[0])] * 2] = 0
+    correlation.values[[np.arange(correlation.shape[0])] * 2] = np.nan
     #correlation[correlation < 0.3] = np.nan
     # Melt the dataframe to 3 columns
     lines = correlation.reset_index().melt(id_vars='index').dropna()
@@ -326,7 +349,7 @@ def citrus_plot(correlation):
     #chord.toolbar.autohide = True
     #export_png(chord, filename="citrusPlot.png")
 
-
+#TODO dit gaat fout voor cancer types
 def get_credibility(clusters, directory):
     # Load the different credibility scores
     small_df = []
@@ -370,6 +393,7 @@ def get_credibility(clusters, directory):
 
 
 # Todo add cutoff
+# Todo dit gaat fout voor cancer types
 def big_vs_small(correlation, groups):
     big_correlation = correlation.copy()
     big_correlation[big_correlation < 0.65] = np.nan
@@ -380,8 +404,6 @@ def big_vs_small(correlation, groups):
     components = {}
     for component in tqdm(set(groups["big"]).intersection(set(big_component.index))):
         df = big_correlation.loc[component].dropna().drop(component)
-        if component == 'consensus independent component 155_big':
-            print(df)
         data[component] = [df.mean()]
         temp = list(df.index)
         temp.append(component)
@@ -428,14 +450,16 @@ def big_vs_small(correlation, groups):
 
 
 def consensus_small(df, groups, credibility_dict):
-    df = df.drop(groups['big'], axis=1)
+    df_small = df.drop(groups['big'], axis=1)
+    df_big = df.loc[:,groups['big']]
+    consensus_big(df_small, df_big)
     df_dcor = df.corr(method=dcor.distance_correlation)
-    #df_dcor = df.corr()
+    #df_dcor = df_small.corr().abs()
     df_dcor_original = df_dcor.copy()
     #plot_local_heatmap(df_dcor)
     df_dcor = df_dcor[df_dcor > 0.5]
     consensus_df = df_dcor.count()
-    consensus_df = consensus_df[consensus_df > 2].sort_values(ascending=False)
+    consensus_df = consensus_df[consensus_df > 1].sort_values(ascending=False)
     estimated_sources = list(consensus_df.index)
     credibility_df = pd.DataFrame()
     for group in credibility_dict:
@@ -452,8 +476,36 @@ def consensus_small(df, groups, credibility_dict):
             by=0, ascending=False).iloc[1:].index))
     df_dcor_original = df_dcor_original.drop(set(drop_columns), axis=0)
     df_dcor_original = df_dcor_original.drop(set(drop_columns), axis=1)
-    print(df_dcor_original)
+    credibility_df = credibility_df.loc[df_dcor_original.columns,:]
+    df_dcor_original = df_dcor_original.reset_index().melt(id_vars='index')
+    df_dcor_original = df_dcor_original.loc[pd.DataFrame(np.sort(
+        df_dcor_original[['index', 'variable']], 1), index=df_dcor_original.index).drop_duplicates(keep='first').index]
+    df_dcor_original = df_dcor_original[df_dcor_original['index'] != df_dcor_original['variable']]
+    #plt.clf()
+    fig, ax = plt.subplots(1, 2, figsize=(15,5))
+    sns.histplot(data=df_dcor_original, x='value', kde=True, ax=ax[0])
+    credibility_df.columns = ['Credibility index']
+    sns.histplot(data=credibility_df, x='Credibility index', kde=True, ax=ax[1])
+    ax[0].set_title("Correlation distribution consensus variables")
+    ax[1].set_title("Credibility index consensus variables")
+    #plt.show()
 
+def consensus_big(df_small, df_big):
+    correlation = pd.DataFrame(index=df_big.columns, columns=df_small.columns)
+    for column in tqdm(df_small.columns):
+        correlation[column] = correlation[column].astype(float)
+        for column1 in df_big:
+            correlation.loc[column, column1] = dcor.distance_correlation(df_small[column], df_big[column1])
+            #correlation.loc[column1, column] = abs(pearsonr(df_small[column], df_big[column1])[0])
+    plt.clf()
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5))
+    sns.histplot(x=correlation.values.ravel(), kde=True, ax=ax[0])
+    q = correlation[correlation > 0.2].values.ravel()
+    q = q[~np.isnan(q)]
+    sns.histplot(x=q, kde=True, ax=ax[1])
+    ax[0].set_title("Correlation small vs big")
+    ax[1].set_title("Correlation small vs big zoomed in")
+    plt.show()
 
 
 if __name__ == "__main__":
