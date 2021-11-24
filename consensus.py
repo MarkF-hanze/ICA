@@ -466,10 +466,7 @@ def biology_small(correlation, groups):
     df = df[df['index'].str.split('_', expand=True)[1] != df['variable'].str.split('_', expand=True)[1]]
     df['vs group'] = df['variable'].str.split('_', expand=True)[1].values
     df = df[~df['index'].isin(groups['big'])]
-    #df = df.groupby(['index', 'vs group']).max().reset_index()
-    #df[df['Value'] == df['Value'].max()]
     df = df[df.groupby(['index', 'vs group'])['value'].transform(max) == df['value']]
-    print(df)
     best_scores = {
         'Small Component': [],
         'Big Component': [],
@@ -481,22 +478,28 @@ def biology_small(correlation, groups):
         big_cor = comp_df[comp_df['vs group'] == 'big']['value'].values[0]
         big_component = comp_df[comp_df['vs group'] == 'big']['variable'].values[0]
         comp_df = comp_df[comp_df['vs group'] != 'big']
-        comp_df['Score'] = comp_df['value'] - big_cor
+        # Get the correlation of the other components with big
+        df2 = df[df['index'].isin(comp_df['variable'])]
+        df2 = df2[df2['vs group'] == 'big']
+        comp_df = pd.merge(left=comp_df, right=df2, left_on='variable', right_on='index')
+        a = np.array(comp_df['value_y'].values.tolist())
+        comp_df['value_y'] = np.where(a < big_cor, big_cor, a).tolist()
+        comp_df['Score'] = comp_df['value_x'] - comp_df['value_y']
         comp_df = comp_df.sort_values(by='Score', ascending=False)
         best_scores['Small Component'].append(component)
         best_scores['Big Component'].append(big_component)
-        small_comp2 = comp_df.iloc[0, :]['variable']
-        best_scores['Small2 Component'].append(small_comp2)
-        big_comp2 = df[df['index'] == small_comp2]
-        big_comp2 = big_comp2[big_comp2['vs group'] == 'big']
-        best_scores['Big2 Component'].append(big_comp2.iloc[0,:]['variable'])
+        best_scores['Small2 Component'].append(comp_df.iloc[0, :]['variable_x'])
+        best_scores['Big2 Component'].append(comp_df.iloc[0, :]['variable_y'])
         best_scores['Score'].append(comp_df.iloc[0, :]['Score'])
     df = pd.DataFrame.from_dict(best_scores, orient='index').transpose().sort_values(by='Score', ascending=False)
+    # Remove the same values
+    df = df.loc[
+        pd.DataFrame(np.sort(df[['Small Component', 'Small2 Component']], 1), index=df.index).drop_duplicates(keep='first').index]
     df.to_csv(f'{save_directory}/Biological_int.csv')
-    plot_histogram(correlation, df.drop('Score', axis=1).values, "Biological_int")
+    plot_histogram(correlation, df.drop('Score', axis=1).values, "Biological_int", len(df[df['Score'] > 0.3]))
 
 
-def plot_histogram(correlation, columns, name_file):
+def plot_histogram(correlation, columns, name_file, count=None):
     fig, axs = plt.subplots(5, 5, sharey=True)
     color_mapper = {'big': 'black'}
     color_i = 0
@@ -536,6 +539,8 @@ def plot_histogram(correlation, columns, name_file):
     lgd = fig.legend(handles=handles, shadow=True, fancybox=True, bbox_to_anchor=(1.4, 0.9))
     # Layout
     fig.add_subplot(111, frameon=False)
+    if count is not None:
+        plt.title(f'Number of sets with score above 0.3 = {count}')
     plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
     plt.ylabel("Pearsons correlation")
     # plt.tight_layout()
@@ -683,13 +688,13 @@ def consensus_big(df_small, df_big, correlation):
 
 if __name__ == "__main__":
     # Load the small and big data
-    directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
+    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
     #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
-    #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
+    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
     small_data, bigdata, lookup_columns = load_data(directory)
     #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Clustered/4_Split'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/4_Split'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
@@ -711,7 +716,7 @@ if __name__ == "__main__":
         df_full = pd.merge(left=dataframe_group[0], right=dataframe_group[1], left_index=True, right_index=True)
         # Get correlation and make only 0,1 based on cutoff
         full_correlation, full_correlation_cut_off = correlation_with_cutoff(df_full, cut_off)
-        citrus_plot(full_correlation)
+        biology_small(full_correlation, lookup_columns)
         sys.exit()
         # Check how the correlation is distributed
         half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
