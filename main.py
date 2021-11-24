@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 hv.extension('bokeh')
 
-
+# TODO Z-scpre checken voor negativiteit
 class Pipeline:
     def __init__(self):
         # Read the GSEA outcome
@@ -26,9 +26,9 @@ class Pipeline:
         self.metabolic = None
         self.immune_df = None
         # Load the files
-        df_reactome = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Adrenal_cancer/GSEA'
+        df_reactome = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Lymphoma/GSEA'
                                   '/enrichment_matrix_Reactome.tsv', sep='\t')
-        df_gobp = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Adrenal_cancer/GSEA/enrichment_matrix_Gene '
+        df_gobp = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Lymphoma/GSEA/enrichment_matrix_Gene '
                               'Ontology - Biolocal Processes.tsv', sep='\t')
         df_reactome = self.clean_enrichment_matrix(df_reactome)
         df_gobp = self.clean_enrichment_matrix(df_gobp)
@@ -129,7 +129,7 @@ class Pipeline:
         return counts
 
     def peak_analysis(self):
-        df = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Adrenal_cancer/CNA_TC'
+        df = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Lymphoma/CNA_TC'
                          '/_extreme_valued_regions_all_chromosomes.txt', sep='\t')
         df = df[df['extreme_value_region_status'] != 0]
         df = df[df['mappings_in_region'] >= 10]
@@ -140,18 +140,37 @@ class Pipeline:
         return consensus_values
 
     def mixing_matrix(self):
-        df = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Adrenal_cancer/ICARUN/'
+        df = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Lymphoma/ICARUN/'
                          'ica_mixing_matrix_consensus.tsv', sep='\t', index_col=0)
-        self.citrus_plot(df)
+        self.counts = self.analyse_results(self.df_reactome)
+        print(self.counts)
+        sys.exit()
+        #self.citrus_plot(df)
+        df = df.T
+        df['Group'] = [''.join([x for x in self.counts[comp] if self.counts[comp][x] != 0])
+                       if comp in self.counts else '' for comp in df.index]
+        df = df[df['Group'].str.contains('is_immune_process')]
+        df = df.drop('Group', axis=1)
+        #print(df.corr(method=dcor.distance_correlation))
+        #g = sns.clustermap(df, cmap=sns.diverging_palette(145, 300, s=60, as_cmap=True), center=0)
+        mixing = df.values
+        ec = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Lymphoma/ICARUN/'
+                         'ica_independent_components_consensus.tsv', sep='\t', index_col=0)
+        ec = ec[df.index].values
+        print(ec.shape)
+        print(mixing.shape)
+        print((ec @ mixing).shape)
+        #plt.show()
+        sys.exit()
+
 
     def citrus_plot(self, df):
-        counts = self.analyse_results(self.df_reactome)
         output_file(filename=f"citrusPlot.html")
         correlation = pd.DataFrame(index=df.columns, columns=df.columns)
         for column in tqdm(correlation):
             for column1 in correlation:
                 correlation.loc[column, column1] = dcor.distance_correlation(df[column], df[column1])
-        # Remove diagonal and values smaller than cutoff
+        # Remove diagonal and
         correlation.values[[np.arange(correlation.shape[0])] * 2] = 0
         # Count the important correlations
         sumdf = correlation.copy()
@@ -161,29 +180,32 @@ class Pipeline:
         sumdf1 = correlation.copy()
         sumdf1[sumdf1 > 0.5] = 0
         sumdf1 = sumdf1.sum()
-        # TODO dit nog zoals die andere doen
-        mask = np.triu(np.ones_like(correlation.values, dtype=bool))
-        correlation = correlation * mask
         # Melt the dataframe to 3 columns
         lines = correlation.reset_index().melt(id_vars='index').dropna()
+        # Drop the duplicates that like ab ba because correlation was mirrored
+        lines = lines.loc[
+            pd.DataFrame(np.sort(lines[['index', 'variable']], 1), index=lines.index).drop_duplicates(
+                keep='first').index]
         # Create a node for every component
         lines['value'] = lines['value'].astype(float)
-        lines['color'] = [0 if x <= 0.5 else x for x in lines['value']]
-        lines['width'] = [0.3 if x <= 0.5 else 5 for x in lines['value']]
+        #lines['color'] = [0 if x <= 0.5 else x for x in lines['value']]
+        lines['color'] = [x for x in lines['value']]
         lines['alpha'] = [x for x in lines['value']]
+        lines['width'] = [.5 if x <= 0.5 else .5 for x in lines['value']]
         # Scale alpha between 0.1 and 1
         lines['alpha'] = MinMaxScaler(feature_range=(0, 1)).fit_transform(lines['alpha'].values.reshape(-1, 1))
         lines['value'] = 1
         lines['value'] = lines['value'].astype(int)
-        color_pallet = list(Inferno256)
-        color_pallet[0] = '#D0D0D0'
+        color_pallet = np.array(Inferno256)
+        color_pallet[0:len(color_pallet)//2] = '#D0D0D0'
+        color_pallet = list(color_pallet)
         nodes = pd.DataFrame()
         nodes['Components'] = correlation.columns
         groups = []
         for index, row in nodes.iterrows():
             comp = row['Components']
-            if comp in counts:
-                groups.append(''.join([x for x in counts[comp] if counts[comp][x] != 0]))
+            if comp in self.counts:
+                groups.append(''.join([x for x in self.counts[comp] if self.counts[comp][x] != 0]))
             else:
                 groups.append('None')
         nodes['Group'] = groups
@@ -213,6 +235,8 @@ class Pipeline:
                                                                'title': 'Distance correlation'}))
 
         chord = chord.redim.range(color=(0, 1))
+        p = hv.render(chord)
+        p.min_border_left, p.min_border_right = 15, 15
         show(hv.render(chord))
 
 
@@ -220,5 +244,5 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     # pd.set_option('display.width', 1000)
     pipeline = Pipeline()
-    pipeline.start_analysis()
+    #pipeline.start_analysis()
     pipeline.mixing_matrix()
