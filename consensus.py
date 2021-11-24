@@ -420,7 +420,7 @@ def load_credibility_cancer():
     return small_df, df_big, sets
 
 
-def get_credibility(clusters, directory=None, cancer_types=False):
+def get_credibility(correlation, directory=None, cancer_types=False):
     if cancer_types:
         small_df, df_big, sets = load_credibility_cancer()
     else:
@@ -431,23 +431,29 @@ def get_credibility(clusters, directory=None, cancer_types=False):
         all_values[s] = df[f'credibility index']
 
     # Get the distribution of only the variables that have consensus
-    consensus_values = defaultdict(list)
-    for cluster in clusters:
-        for value in cluster:
-            consensus_values[value.split('_')[1]].append(df_big.loc[value, 'credibility index'])
+    leave_correlations = [0, 0.8]
+    # for cluster in clusters:
+     #   for value in cluster:
+     #       consensus_values[value.split('_')[1]].append(df_big.loc[value, 'credibility index'])
     # Make the histogram
-    for value in consensus_values:
-        plt.clf()
-        sns.histplot(consensus_values[value], kde=True, color='red',
-                     label='Consensus variables', binrange=(0, 1))
-        sns.histplot(all_values[value].values, kde=True, color='blue', label='All variables',
-                     bins=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-                     )
+    cm = plt.get_cmap('tab10')
+    for small_set in all_values:
+        for color, value in enumerate(leave_correlations):
+            column = [z for z in correlation.columns if z not in all_values[small_set].index]
+            set_correlation = correlation.loc[all_values[small_set].index, column]
+            set_correlation = set_correlation.max(axis=1)
+            set_correlation = set_correlation[set_correlation > value]
+            set_correlation = all_values[small_set][list(set_correlation.index)].values
+            sns.kdeplot(x=set_correlation, label=f'Correlation higher than {value} \nn={len(set_correlation)}', color=cm(color), fill=True,
+                        alpha=.4)
         plt.xlim(0, 1)
-        plt.legend()
-        plt.title(value)
+        plt.xlabel('Credibility index')
+        plt.legend(loc='upper left')
+        plt.title(f'Credibility index consensus vs non consensus \nSet {small_set}')
         plt.tight_layout()
-        plt.savefig(f'{save_directory}/Credibility_distribution_{value}.svg', dpi=1200)
+        plt.savefig(f'{save_directory}/Credibility_distribution_{small_set}.svg', dpi=1200)
+        plt.clf()
+    sys.exit()
     return all_values
 
 
@@ -685,7 +691,7 @@ def consensus_big(df_small, df_big, correlation):
 #TODO alles opnieuw runnen
 if __name__ == "__main__":
     # Load the small and big data
-    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/2_Split/'
+    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
     #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
     directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
     small_data, bigdata, lookup_columns = load_data(directory)
@@ -715,8 +721,7 @@ if __name__ == "__main__":
         full_correlation, full_correlation_cut_off = correlation_with_cutoff(df_full, cut_off)
         clusters = make_clusters(full_correlation_cut_off)
         # See how the credibility is distributed
-        credibility = get_credibility(clusters, directory=directory)
-        consensus_small(df_full, lookup_columns, credibility, full_correlation)
+        credibility = get_credibility(full_correlation, directory=directory)
         sys.exit()
         # Check how the correlation is distributed
         half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
@@ -743,8 +748,8 @@ if __name__ == "__main__":
         # Make the clusters based on the correlation
         clusters = make_clusters(full_correlation_cut_off)
         # See how the credibility is distributed
-        credibility = get_credibility(clusters, directory=directory)
-        #credibility = get_credibility(clusters, cancer_types=False)
+        credibility = get_credibility(full_correlation, directory=directory)
+        #credibility = get_credibility(full_correlation, cancer_types=False)
         consensus_small(df_full, lookup_columns, credibility, full_correlation)
         # See if the correlation gets better when merging clusters
         merge_clusters(df_full, clusters, 'clustered')
