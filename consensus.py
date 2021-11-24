@@ -676,26 +676,22 @@ def consensus_small(df, groups, credibility_dict, correlation):
 
 def consensus_big(df_small, df_big, correlation):
     correlation = correlation.loc[df_big.columns, df_small.columns]
-    fig, ax = plt.subplots(1, 2, figsize=(15, 5))
-    sns.histplot(x=correlation.values.ravel(), kde=True, ax=ax[0])
-    q = correlation[correlation > 0.2].values.ravel()
-    count = correlation[correlation > 0.2].dropna(axis=0, how="all").shape[0]
-    q = q[~np.isnan(q)]
-    sns.histplot(x=q, kde=True, ax=ax[1])
-    ax[0].set_title(f"Correlation small vs big big n = {correlation.shape[0]}")
-    ax[1].set_title(f"Correlation small vs big zoomed in big n = {count}")
+    correlation = correlation.max(axis=1)
+    fig = plt.figure(figsize=(15,5))
+    sns.histplot(x=correlation.values, kde=True)
+    plt.title(f"Correlation small vs big")
     plt.savefig(f'{save_directory}/Consensus_Small_vs_Big.svg', dpi=1200)
 
-
+#TODO alles opnieuw runnen
 if __name__ == "__main__":
     # Load the small and big data
     #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/2_Split/'
     #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
-    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/3_Split/'
+    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
     small_data, bigdata, lookup_columns = load_data(directory)
     #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/3_Split'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/4_Split'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
@@ -717,7 +713,10 @@ if __name__ == "__main__":
         df_full = pd.merge(left=dataframe_group[0], right=dataframe_group[1], left_index=True, right_index=True)
         # Get correlation and make only 0,1 based on cutoff
         full_correlation, full_correlation_cut_off = correlation_with_cutoff(df_full, cut_off)
-        biology_small(full_correlation, lookup_columns)
+        clusters = make_clusters(full_correlation_cut_off)
+        # See how the credibility is distributed
+        credibility = get_credibility(clusters, directory=directory)
+        consensus_small(df_full, lookup_columns, credibility, full_correlation)
         sys.exit()
         # Check how the correlation is distributed
         half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
