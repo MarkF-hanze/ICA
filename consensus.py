@@ -496,7 +496,8 @@ def biology_small(correlation, groups):
     df = df.loc[
         pd.DataFrame(np.sort(df[['Small Component', 'Small2 Component']], 1), index=df.index).drop_duplicates(keep='first').index]
     df.to_csv(f'{save_directory}/Biological_int.csv')
-    plot_histogram(correlation, df.drop('Score', axis=1).values, "Biological_int", len(df[df['Score'] > 0.3]))
+    # Bigger than 0.5 count it
+    plot_histogram(correlation, df.drop('Score', axis=1).values, "Biological_int", len(df[df['Score'] > 0.5]))
 
 
 def plot_histogram(correlation, columns, name_file, count=None):
@@ -540,7 +541,7 @@ def plot_histogram(correlation, columns, name_file, count=None):
     # Layout
     fig.add_subplot(111, frameon=False)
     if count is not None:
-        plt.title(f'Number of sets with score above 0.3 = {count}')
+        plt.title(f'Number of sets with score above 0.5 = {count}')
     plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
     plt.ylabel("Pearsons correlation")
     # plt.tight_layout()
@@ -688,13 +689,13 @@ def consensus_big(df_small, df_big, correlation):
 
 if __name__ == "__main__":
     # Load the small and big data
-    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
+    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/2_Split/'
     #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
-    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
+    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/3_Split/'
     small_data, bigdata, lookup_columns = load_data(directory)
     #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/4_Split'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/3_Split'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
