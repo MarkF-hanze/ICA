@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 hv.extension('bokeh')
 
-# TODO Z-scpre checken voor negativiteit
+# TODO Z-score checken voor negativiteit
 class Pipeline:
     def __init__(self):
         # Read the GSEA outcome
@@ -143,9 +143,7 @@ class Pipeline:
         df = pd.read_csv('/home/MarkF/DivideConquer/Results/GPL570/Lymphoma/ICARUN/'
                          'ica_mixing_matrix_consensus.tsv', sep='\t', index_col=0)
         self.counts = self.analyse_results(self.df_reactome)
-        print(self.counts)
-        sys.exit()
-        #self.citrus_plot(df)
+        self.citrus_plot(df)
         df = df.T
         df['Group'] = [''.join([x for x in self.counts[comp] if self.counts[comp][x] != 0])
                        if comp in self.counts else '' for comp in df.index]
@@ -161,7 +159,6 @@ class Pipeline:
         print(mixing.shape)
         print((ec @ mixing).shape)
         #plt.show()
-        sys.exit()
 
 
     def citrus_plot(self, df):
@@ -237,6 +234,7 @@ class Pipeline:
         chord = chord.redim.range(color=(0, 1))
         p = hv.render(chord)
         p.min_border_left, p.min_border_right = 15, 15
+        print(1)
         show(hv.render(chord))
 
 

@@ -295,9 +295,9 @@ def create_fakes(nodes, lines, fake_count):
 def get_sum(lines, bigger):
     summed = lines.copy()
     if bigger:
-        summed['alpha'] = [0 if z < 0.8 else z for z in summed['alpha']]
+        summed['alpha'] = [0 if z < 0.6 else z for z in summed['alpha']]
     else:
-        summed['alpha'] = [0 if z >= 0.8 else z for z in summed['alpha']]
+        summed['alpha'] = [0 if z >= 0.6 else z for z in summed['alpha']]
     total_value = defaultdict(lambda: 0)
     for index, row in summed.iterrows():
         total_value[row['index']] = total_value[row['index']] + row['alpha']
@@ -325,14 +325,17 @@ def citrus_plot(correlation):
     lines['color'] = [z for z in lines['value']]
     lines['alpha'] = [z for z in lines['value']]
     # lines['width'] = [.5 if z < 0.8 else 5 for z in lines['value']]
-    lines['width'] = [.1 if z < 0.6 else .3 for z in lines['value']]
+    lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
     # lines['width'] = .3
     lines['value'] = 1
     lines['value'] = lines['value'].astype(int)
     # Make until 0.8 grey
     color_pallet = np.array(list(Blues256)[::-1])
-    color_pallet[0: round((len(color_pallet) / 10) * 6)] = '#D0D0D0'
-    color_pallet = list(color_pallet)
+    size = round((len(color_pallet)/4) * 6)
+    greys = np.repeat('#D0D0D0', size).tolist()
+    greys.extend(list(color_pallet))
+    #color_pallet[0: round((len(color_pallet) / 10) * 6)] = '#D0D0D0'
+    color_pallet = greys
     # Add the missing lines back due to not plotting certain lines
     lines = create_fake_lines(missing_df, lines)
     # Create a node for every component
@@ -686,7 +689,7 @@ if __name__ == "__main__":
     small_data, bigdata, lookup_columns = load_data(directory)
     #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/Code/Results/Clustered/4_Split'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Clustered/4_Split'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
@@ -708,6 +711,8 @@ if __name__ == "__main__":
         df_full = pd.merge(left=dataframe_group[0], right=dataframe_group[1], left_index=True, right_index=True)
         # Get correlation and make only 0,1 based on cutoff
         full_correlation, full_correlation_cut_off = correlation_with_cutoff(df_full, cut_off)
+        citrus_plot(full_correlation)
+        sys.exit()
         # Check how the correlation is distributed
         half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
         check_distribution(half_correlation)
