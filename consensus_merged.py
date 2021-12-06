@@ -147,6 +147,7 @@ def consensus_vs_correlation(directory):
 
 
 def consensus_big(dictionairy):
+    sns.set(font_scale=2.4)
     fig = plt.figure(figsize=(15, 5))
     test = {}
     save_df = []
@@ -167,9 +168,9 @@ def consensus_big(dictionairy):
     plt.title(f"Density plot of highest correlation for every estimated source \n in the sample data")
     plt.xlabel("Pearson's correlation")
     plt.legend()
-    plt.savefig(f'Results/Pearson_distribution_KDE.svg', dpi=1200)
+    plt.savefig(f'Results/Pearson_distribution_KDE.svg', dpi=1200, bbox_inches='tight')
     save_df.to_csv('Results/Pearson_distribution_test.csv', index=False)
-
+    sns.set(font_scale=1)
 
 def check_citrus(dictionairy):
     # output_file(filename=f"{save_directory}/citrusPlot.html")

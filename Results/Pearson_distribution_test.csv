@@ -1,7 +1,7 @@
 Group 1,Group 2,Welsh p_value
-2_Clustered,3_Clustered,0.07461
+2_Clustered,3_Clustered,0.07441
 2_Clustered,4_Clustered,0.0
-3_Clustered,4_Clustered,0.00074
+3_Clustered,4_Clustered,0.00068
 2_Random,3_Random,0.0
 2_Random,4_Random,0.0
 3_Random,4_Random,0.0
