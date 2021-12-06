@@ -103,7 +103,7 @@ def get_consensus(split_dictionairy):
     # Only leave the components that correlated with at least 1 other component (bigger than 1 cause diagonal)
     credibility_df = pd.DataFrame()
     drop_columns = []
-    correlation_cutoff = 0.5
+    correlation_cutoff = 0.6
     estimated_sources = list(lines[lines['value'] > correlation_cutoff]['index'])
     # TODO gaat dit goed?
     while len(estimated_sources) > 0:
@@ -130,7 +130,7 @@ def consensus_vs_correlation(directory):
         correlation = correlation.loc[index, column].max(axis=0)
         correlation.name = f'Correlation_{split}'
         correlation = pd.DataFrame(correlation)
-        test_df = pd.DataFrame(directory['2_Clustered']['Credibility']['credibility index'])
+        test_df = pd.DataFrame(directory[split]['Credibility']['credibility index'])
         test_df = test_df.join(correlation, how='inner')
         cor, p = stats.spearmanr(test_df['credibility index'], test_df[f'Correlation_{split}'])
         save_df.append([split, cor, p])
