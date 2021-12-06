@@ -120,6 +120,7 @@ def get_consensus(split_dictionairy):
 
 
 def consensus_vs_correlation(directory):
+    sns.set(font_scale=1.5)
     end_df = pd.DataFrame(directory['2_Clustered']['Credibility']['credibility index'])
     save_df = []
     for split in directory:
@@ -144,6 +145,7 @@ def consensus_vs_correlation(directory):
     plt.clf()
     save_df = pd.DataFrame(save_df, columns=['Group', 'Spearman correlation', 'Spearman p value'])
     save_df.to_csv('Results/Correlation_vs_Credibility.csv', index=False)
+    sns.set(font_scale=1)
 
 
 def consensus_big(dictionairy):
