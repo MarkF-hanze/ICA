@@ -28,7 +28,6 @@ for label, split_type in zip(labels, directorys):
     ys_small = []
     ys_big = []
     for directory in split_type:
-        print(directory)
         small_data, big_data, split_columns = load_data(directory,
                                                         '/home/MarkF/DivideConquer/Results/MathExperiment'
                                                         '/0_Credibility/ica_independent_components_consensus.tsv')
@@ -36,20 +35,20 @@ for label, split_type in zip(labels, directorys):
         small_non_appearing_columns = []
         small_appearing_columns = []
         big_appearing_columns = []
+        big_non_appearing_columns = []
         for df_small in small_data:
-            #df_small = df_small.sample(frac=0.1, axis=1)
-            for column in tqdm(df_small.columns):
-                consensus = False
-                for column1 in big_data:
-                    if abs(pearsonr(df_small[column], big_data[column1])[0]) > 0.8:
-                        consensus = True
-                        big_appearing_columns.append(column1)
-                        break
-                if consensus:
-                    small_non_appearing_columns.append(column)
-                else:
-                    small_appearing_columns.append(column)
-        big_non_appearing_columns = [x for x in big_data.columns if x not in big_appearing_columns]
+            combined_df = pd.merge(left=df_small, right=big_data, left_index=True, right_index=True)
+            correlation = np.corrcoef(combined_df.values, rowvar=False)
+            correlation = np.absolute(correlation)
+            correlation = pd.DataFrame(correlation, columns=combined_df.columns, index=combined_df.columns)
+            correlation = correlation.loc[df_small.columns, big_data.columns]
+            correlation_big = correlation.max()
+            correlation_small = correlation.max(axis=1)
+            big_appearing_columns.extend(list(correlation_big[correlation_big > 0.8].index))
+            small_appearing_columns.extend(list(correlation_small[correlation_small > 0.8].index))
+            small_non_appearing_columns.extend(list(correlation_small[correlation_small <= 0.8].index))
+
+        big_non_appearing_columns = [z for z in big_data.columns if z not in big_appearing_columns]
         ys_small.append(len(small_non_appearing_columns))
         ys_big.append(len(big_non_appearing_columns))
     ax.ravel()[0].plot(xs, ys_small, label=label, color=labels[label])
@@ -64,8 +63,10 @@ ax.ravel()[1].set_xlabel('Amount of splits')
 ax.ravel()[0].set_title("Small non appearing estimated sources in big")
 ax.ravel()[1].set_title("Big non appearing estimated sources in small")
 ax.ravel()[1].legend(shadow=True, fancybox=True)
-ax.ravel()[1].legend(bbox_to_anchor=(-0.01, 1.2))
+ax.ravel()[1].legend(bbox_to_anchor=(-0.01, 1.3))
 # ax.ravel()[2].set_title("Small non appearing clusters in big clustered split")
 # ax.ravel()[3].set_title("Big non appearing clusters in small clustered split")
+plt.xticks([2, 3, 4])
 plt.tight_layout()
+#plt.show()
 plt.savefig("Results/Consensus_Big_vs_Small.svg")

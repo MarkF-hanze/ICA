@@ -120,6 +120,7 @@ def check_distribution(df):
     ax3.get_shared_x_axes().join(ax3, ax4)
     plt.tight_layout()
     plt.savefig(f'{save_directory}/Pearson_distribution.png', dpi=1200)
+    plt.clf()
 
 
 def correlation_with_cutoff(df, stopping_point):
@@ -150,7 +151,7 @@ def make_clusters(df):
 
 def plot_global_heatmap(df, name):
     # Reorder and make global heatmap
-    palette = ['#FFFF00', '#000000']
+    palette = ['#0000FF', '#00FFFF']
     x_as = []
     y_as = []
     colors = []
@@ -205,6 +206,8 @@ def merge_clusters(df, clusters, name):
     groups = [f'_{z}' for z in groups if z != 'big']
     # Loop over every cluster
     for cluster in tqdm(clusters):
+        if len(set([x.split('_')[1] for x in cluster])) != len(cluster):
+            continue
         # If the cluster has more than 2 values so a adding can happen
         if len(cluster) > 2:
             # Get the component for every set
@@ -245,6 +248,7 @@ def merge_clusters(df, clusters, name):
     plt.xlabel('Original distance correlation')
     plt.ylabel('New distance correlation')
     plt.savefig(f'{save_directory}/Fading_{name}.svg', dpi=1200)
+    plt.clf()
 
 
 def create_fake_lines(all_fakes, lines):
@@ -329,7 +333,7 @@ def citrus_plot(correlation):
     # lines['width'] = .3
     lines['value'] = 1
     lines['value'] = lines['value'].astype(int)
-    # Make until 0.8 grey
+    # Make until 0.6 grey
     color_pallet = np.array(list(Blues256)[::-1])
     size = round((len(color_pallet)/4) * 6)
     greys = np.repeat('#D0D0D0', size).tolist()
@@ -432,9 +436,6 @@ def get_credibility(correlation, directory=None, cancer_types=False):
 
     # Get the distribution of only the variables that have consensus
     leave_correlations = [0, 0.8]
-    # for cluster in clusters:
-     #   for value in cluster:
-     #       consensus_values[value.split('_')[1]].append(df_big.loc[value, 'credibility index'])
     # Make the histogram
     cm = plt.get_cmap('tab10')
     for small_set in all_values:
@@ -453,21 +454,10 @@ def get_credibility(correlation, directory=None, cancer_types=False):
         plt.tight_layout()
         plt.savefig(f'{save_directory}/Credibility_distribution_{small_set}.svg', dpi=1200)
         plt.clf()
-    sys.exit()
     return all_values
 
 
 def biology_small(correlation, groups):
-    # i = 0
-    # sample_groups = []
-    # for group in groups:
-    #     sample_groups.extend(groups[group])
-    #     print(group)
-    #     i+=1
-    #     if i == 2:
-    #         break
-    # sample_groups.extend(groups['big'])
-    # correlation = correlation.loc[sample_groups, sample_groups]
     df = correlation.reset_index().melt(id_vars='index').dropna()
     df = df[df['index'].str.split('_', expand=True)[1] != df['variable'].str.split('_', expand=True)[1]]
     df['vs group'] = df['variable'].str.split('_', expand=True)[1].values
@@ -503,16 +493,23 @@ def biology_small(correlation, groups):
         pd.DataFrame(np.sort(df[['Small Component', 'Small2 Component']], 1), index=df.index).drop_duplicates(keep='first').index]
     df.to_csv(f'{save_directory}/Biological_int.csv')
     # Bigger than 0.5 count it
-    plot_histogram(correlation, df.drop('Score', axis=1).values, "Biological_int", len(df[df['Score'] > 0.5]))
+    df = df[df['Score'] > 0.5]
+    plot_histogram(correlation, df.drop('Score', axis=1).iloc[:].values, "Biological_int")
 
 
-def plot_histogram(correlation, columns, name_file, count=None):
-    fig, axs = plt.subplots(5, 5, sharey=True)
+def plot_histogram(correlation, columns, name_file):
+    rows = round(np.sqrt(len(columns)))
+    cols = round(np.sqrt(len(columns)))
+    if rows * cols < len(columns):
+        rows += 1
+    fig, axs = plt.subplots(rows, cols, sharey=True)
+    if not isinstance(axs, np.ndarray):
+        axs = np.array([axs])
     color_mapper = {'big': 'black'}
     color_i = 0
-    for z in range(len(axs.ravel())):
+    for z, col_name in enumerate(columns):
         # Get the correlations
-        df = correlation.loc[columns[z], columns[z]]
+        df = correlation.loc[col_name, col_name]
         df = df.reset_index().melt(id_vars='index')
         # Remove sames values
         df = df.loc[
@@ -546,39 +543,28 @@ def plot_histogram(correlation, columns, name_file, count=None):
     lgd = fig.legend(handles=handles, shadow=True, fancybox=True, bbox_to_anchor=(1.4, 0.9))
     # Layout
     fig.add_subplot(111, frameon=False)
-    if count is not None:
-        plt.title(f'Number of sets with score above 0.5 = {count}')
     plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
     plt.ylabel("Pearsons correlation")
     # plt.tight_layout()
     plt.savefig(f'{save_directory}/{name_file}.svg', dpi=1200,
                 bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.clf()
 
-
-def big_vs_small(correlation, groups, big=True):
-    # Count how often a estimated source correlates with another source with cutoff 0.65
+#TODO gaat dit goed??
+def big_vs_small(correlation, groups):
+    # Count how often a estimated source correlates with another source with cutoff 0.6
     big_correlation = correlation.copy()
-    big_correlation[big_correlation < 0.5] = np.nan
+    big_correlation[big_correlation < 0.6] = np.nan
     big_component = big_correlation.count(axis=1)
     # Dictionaries to save the results
     data = {}
     end_results = {}
     components = {}
     # Get the components that are both in the big group and have a correlation with at least 1 small component
-    if big:
-        # Only leave components that correlate with at least 2 others (bigger than 2 because it also correlated with
-        # itself)
-        big_component = big_component[big_component > 2]
-        loop = set(groups["big"]).intersection(set(big_component.index))
-    else:
-        # Only leave components that correlate with at least 2 others (bigger than 2 because it also correlated with
-        # itself)
-        big_component = big_component[big_component > 1]
-        smallgroups = []
-        for z in groups:
-            if z != "big":
-                smallgroups.extend(groups[z])
-        loop = set(smallgroups).intersection(set(big_component.index))
+    # Only leave components that correlate with at least 2 others (bigger than 2 because it also correlated with
+    # itself)
+    big_component = big_component[big_component > 2]
+    loop = set(groups["big"]).intersection(set(big_component.index))
     for component in tqdm(loop):
         # Get the big source and the highly correlated sources and drop the big component
         with_duplicated_df = pd.DataFrame(big_correlation.loc[component].dropna().drop(component))
@@ -589,6 +575,7 @@ def big_vs_small(correlation, groups, big=True):
         unique_groups = len(with_duplicated_df["Group"].unique())
         if unique_groups >= 2:
             groups = with_duplicated_df.groupby("Group").count()
+            # Get all how often a single group appears
             groups = groups[groups[component] >= 2]
             if len(groups) > 0:
                 all_combinations = []
@@ -615,7 +602,9 @@ def big_vs_small(correlation, groups, big=True):
                 # Append the mean distance of all the small components between each other
                 data[f"{component}_{z}"].append(np.mean(cor_values))
                 # Best components have high correlation between big and small and low between small small
-                end_results[f"{component}_{z}"] = data[f"{component}_{z}"][0] - data[f"{component}_{z}"][1]
+                score = data[f"{component}_{z}"][0] - data[f"{component}_{z}"][1]
+                #if score > 0.2:
+                end_results[f"{component}_{z}"] = score
     # Sort the end results to see the best components
     high_to_low = [k for k, v in sorted(end_results.items(), key=lambda item: item[1])][::-1]
     input_figure = [components[x] for x in high_to_low]
@@ -676,8 +665,9 @@ def consensus_small(df, groups, credibility_dict, correlation):
     ax[0].set_title("Correlation distribution consensus variables")
     ax[1].set_title("Credibility index consensus variables")
     plt.savefig(f'{save_directory}/Consensus_Small.svg', dpi=1200)
+    plt.clf()
     # See the correlation of small vs big
-    consensus_big(df_small.loc[:, credibility_df.index], df_big, correlation)
+    #consensus_big(df_small.loc[:, credibility_df.index], df_big, correlation)
 
 
 def consensus_big(df_small, df_big, correlation):
@@ -687,17 +677,19 @@ def consensus_big(df_small, df_big, correlation):
     sns.histplot(x=correlation.values, kde=True)
     plt.title(f"Correlation small vs big")
     plt.savefig(f'{save_directory}/Consensus_Small_vs_Big.svg', dpi=1200)
+    plt.clf()
 
 #TODO alles opnieuw runnen
+# TODO testen
 if __name__ == "__main__":
     # Load the small and big data
-    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
+    directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
     #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
-    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
+    #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
     small_data, bigdata, lookup_columns = load_data(directory)
     #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/4_Split'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Clustered/4_Split'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
@@ -713,21 +705,17 @@ if __name__ == "__main__":
     # Only compare these groups for now
     compare_groups = [(big_small_data, bigdata)]
     # Pearson cutoff for consensus
-    cut_off = 0.8
+    cut_off = 0.6
     for dataframe_group in compare_groups:
         # Merge everything together
         df_full = pd.merge(left=dataframe_group[0], right=dataframe_group[1], left_index=True, right_index=True)
         # Get correlation and make only 0,1 based on cutoff
         full_correlation, full_correlation_cut_off = correlation_with_cutoff(df_full, cut_off)
-        clusters = make_clusters(full_correlation_cut_off)
-        # See how the credibility is distributed
-        credibility = get_credibility(full_correlation, directory=directory)
-        sys.exit()
         # Check how the correlation is distributed
-        half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
-        check_distribution(half_correlation)
+        #half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
+        #check_distribution(half_correlation)
         biology_small(full_correlation, lookup_columns)
-        big_vs_small(full_correlation, lookup_columns, True)
+        big_vs_small(full_correlation, lookup_columns)
         # Cluster and plot
         test_df = full_correlation_cut_off.sum()
         test_df = test_df[test_df > 1]
@@ -748,9 +736,9 @@ if __name__ == "__main__":
         # Make the clusters based on the correlation
         clusters = make_clusters(full_correlation_cut_off)
         # See how the credibility is distributed
-        credibility = get_credibility(full_correlation, directory=directory)
-        #credibility = get_credibility(full_correlation, cancer_types=False)
-        consensus_small(df_full, lookup_columns, credibility, full_correlation)
+        #credibility = get_credibility(full_correlation, directory=directory)
+        #credibility = get_credibility(full_correlation, cancer_types=True)
+        #consensus_small(df_full, lookup_columns, credibility, full_correlation)
         # See if the correlation gets better when merging clusters
         merge_clusters(df_full, clusters, 'clustered')
         # merge_clusters(df_full, fake_clusters, 'random')
