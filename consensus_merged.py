@@ -120,7 +120,7 @@ def get_consensus(split_dictionairy):
 
 
 def consensus_vs_correlation(directory):
-    sns.set(font_scale=1.5)
+    sns.set(font_scale=1.2)
     end_df = pd.DataFrame(directory['2_Clustered']['Credibility']['credibility index'])
     save_df = []
     for split in directory:
@@ -139,8 +139,9 @@ def consensus_vs_correlation(directory):
     end_df = end_df.melt(id_vars=['index', 'credibility index'])
     end_df['group'] = [x.split('_', 1)[-1] for x in end_df['variable']]
     end_df[['split', 'group']] = end_df['group'].str.split('_', expand=True)
+    end_df = end_df.rename(columns={"value": "Pearson's correlation"})
     g = sns.FacetGrid(end_df, col="split", row='group', margin_titles=True)
-    g.map(sns.scatterplot, 'credibility index', 'value', alpha=.7)
+    g.map(sns.scatterplot, 'credibility index', "Pearson's correlation", alpha=.7)
     plt.savefig(f'Results/Correlation_vs_Credibility.svg', dpi=1200)
     plt.clf()
     save_df = pd.DataFrame(save_df, columns=['Group', 'Spearman correlation', 'Spearman p value'])
