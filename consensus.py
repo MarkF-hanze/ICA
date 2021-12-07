@@ -364,15 +364,17 @@ def citrus_plot(correlation):
     nodes = hv.Dataset(nodes, 'Components', ['Group', 'node_color', 'text'])
     # chord = hv.Chord((lines, nodes), ['index', 'variable'], ['value'])
     chord = hv.Chord((lines, nodes))
+    # '40px'
     chord.opts(
         opts.Chord(edge_color='color', edge_cmap=color_pallet, edge_alpha='alpha',
                    height=700, labels='text', node_color='node_color', label_text_color='node_color',
                    width=700, colorbar=True, edge_line_width='width', node_marker='none', node_radius=5,
-                   label_text_font_size='40px', colorbar_position='top',
+                   label_text_font_size='20px', colorbar_position='top',
                    colorbar_opts={'width': 500, 'title': 'Pearson correlation'}),
     )
     chord = chord.redim.range(color=(0, 1))
     hv.save(chord, f'{save_directory}/citrusPlot.png', )
+    sys.exit()
 
 
 def load_credibility(directory):
@@ -741,5 +743,5 @@ if __name__ == "__main__":
         #credibility = get_credibility(full_correlation, cancer_types=True)
         #consensus_small(df_full, lookup_columns, credibility, full_correlation)
         # See if the correlation gets better when merging clusters
-        merge_clusters(df_full, clusters, 'clustered')
+        # merge_clusters(df_full, clusters, 'clustered')
         # merge_clusters(df_full, fake_clusters, 'random')
