@@ -289,7 +289,6 @@ def create_fakes(nodes, lines, fake_count, colors_mapped):
                 colors_mapped[group] = Category20[20][z]
                 z += 1
     print(colors_mapped)
-    sys.exit()
     new_df['node_color'] = [colors_mapped[z] for z in new_df.Group]
     lines = create_fake_lines(all_fakes, lines)
     return new_df, lines
@@ -727,9 +726,9 @@ if __name__ == "__main__":
         for z in color_mapper:
             if z != 'big':
                 rgb = tuple([int(x * 255) for x in color_mapper[z]])
-                print(z)
-                print(rgb)
-                print('#%02x%02x%02x' % rgb[:3])
+                color_mapper[z] = '#%02x%02x%02x' % rgb[:3]
+            else:
+                color_mapper[z] = '#000000'
 
         big_vs_small(full_correlation, lookup_columns)
         # Cluster and plot
