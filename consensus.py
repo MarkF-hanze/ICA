@@ -288,7 +288,8 @@ def create_fakes(nodes, lines, fake_count, colors_mapped):
             else:
                 colors_mapped[group] = Category20[20][z]
                 z += 1
-                print(z)
+    print(colors_mapped)
+    sys.exit()
     new_df['node_color'] = [colors_mapped[z] for z in new_df.Group]
     lines = create_fake_lines(all_fakes, lines)
     return new_df, lines
@@ -371,7 +372,7 @@ def citrus_plot(correlation, colors_mapped):
                    colorbar_opts={'width': 500, 'title': 'Pearson correlation'}),
     )
     chord = chord.redim.range(color=(0, 1))
-    hv.save(chord, f'{save_directory}/citrusPlot.png', )
+    hv.save(chord, f'{save_directory}/citrusPlot.png')
     sys.exit()
 
 
@@ -725,7 +726,7 @@ if __name__ == "__main__":
         # Turn it to later colors for the html plot
         for z in color_mapper:
             if z != 'big':
-                rgb = (int(x * 255) for x in color_mapper[z])
+                rgb = tuple([int(x * 255) for x in color_mapper[z]])
                 print(z)
                 print(rgb)
                 print('#%02x%02x%02x' % rgb[:3])
