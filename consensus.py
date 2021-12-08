@@ -262,7 +262,7 @@ def create_fake_lines(all_fakes, lines):
     return lines
 
 
-def create_fakes(nodes, lines, fake_count):
+def create_fakes(nodes, lines, fake_count, colors_mapped):
     new_df = pd.DataFrame()
     all_fakes = pd.DataFrame()
     z = 0
@@ -279,19 +279,17 @@ def create_fakes(nodes, lines, fake_count):
         new_df = pd.concat([new_df, df, fake_df])
         all_fakes = pd.concat([fake_df, all_fakes])
         z += 1
-    z = 0
-    color_mapper = {}
+    z = len(colors_mapped)
     unique_count = len(nodes.Group.unique())
     for group in new_df.Group.unique():
-        if 'fake' in group:
-            color_mapper[group] = '#FFFFFF'
-        else:
-            if unique_count <= 9:
-                color_mapper[group] = Set1[9][z]
+        if group not in colors_mapped:
+            if 'fake' in group:
+                colors_mapped[group] = '#FFFFFF'
             else:
-                color_mapper[group] = Category20[20][z]
-            z += 1
-    new_df['node_color'] = [color_mapper[z] for z in new_df.Group]
+                colors_mapped[group] = Category20[20][z]
+                z += 1
+                print(z)
+    new_df['node_color'] = [colors_mapped[z] for z in new_df.Group]
     lines = create_fake_lines(all_fakes, lines)
     return new_df, lines
 
@@ -310,7 +308,7 @@ def get_sum(lines, bigger):
     return summed
 
 
-def citrus_plot(correlation):
+def citrus_plot(correlation, colors_mapped):
     # output_file(filename=f"{save_directory}/citrusPlot.html")
     # Remove diagonal and values smaller than cutoff
     correlation.values[[np.arange(correlation.shape[0])] * 2] = np.nan
@@ -329,17 +327,17 @@ def citrus_plot(correlation):
     lines['color'] = [z for z in lines['value']]
     lines['alpha'] = [z for z in lines['value']]
     # lines['width'] = [.5 if z < 0.8 else 5 for z in lines['value']]
-    #lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
+    # lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
     lines['width'] = [.1 if z < 0.6 else .9 for z in lines['value']]
     # lines['width'] = .3
     lines['value'] = 1
     lines['value'] = lines['value'].astype(int)
     # Make until 0.6 grey
     color_pallet = np.array(list(Blues256)[::-1])
-    size = round((len(color_pallet)/4) * 6)
+    size = round((len(color_pallet) / 4) * 6)
     greys = np.repeat('#D0D0D0', size).tolist()
     greys.extend(list(color_pallet))
-    #color_pallet[0: round((len(color_pallet) / 10) * 6)] = '#D0D0D0'
+    # color_pallet[0: round((len(color_pallet) / 10) * 6)] = '#D0D0D0'
     color_pallet = greys
     # Add the missing lines back due to not plotting certain lines
     lines = create_fake_lines(missing_df, lines)
@@ -357,7 +355,7 @@ def citrus_plot(correlation):
     nodes = nodes.drop('value_x', axis=1)
     nodes = nodes.drop('value_y', axis=1)
 
-    nodes, lines = create_fakes(nodes, lines, 1000)
+    nodes, lines = create_fakes(nodes, lines, 1000, colors_mapped)
 
     lines = lines.sort_values('color')
     # Make it holoview objects
@@ -369,7 +367,7 @@ def citrus_plot(correlation):
         opts.Chord(edge_color='color', edge_cmap=color_pallet, edge_alpha='alpha',
                    height=700, labels='text', node_color='node_color', label_text_color='node_color',
                    width=700, colorbar=True, edge_line_width='width', node_marker='none', node_radius=5,
-                   label_text_font_size='20px', colorbar_position='top',
+                   label_text_font_size='10px', colorbar_position='top',
                    colorbar_opts={'width': 500, 'title': 'Pearson correlation'}),
     )
     chord = chord.redim.range(color=(0, 1))
@@ -448,7 +446,8 @@ def get_credibility(correlation, directory=None, cancer_types=False):
             set_correlation = set_correlation.max(axis=1)
             set_correlation = set_correlation[set_correlation > value]
             set_correlation = all_values[small_set][list(set_correlation.index)].values
-            sns.kdeplot(x=set_correlation, label=f'Correlation higher than {value} \nn={len(set_correlation)}', color=cm(color), fill=True,
+            sns.kdeplot(x=set_correlation, label=f'Correlation higher than {value} \nn={len(set_correlation)}',
+                        color=cm(color), fill=True,
                         alpha=.4)
         plt.xlim(0, 1)
         plt.xlabel('Credibility index')
@@ -473,7 +472,7 @@ def biology_small(correlation, groups):
         'Big2 Component': [],
         'Score': [],
     }
-    for component, comp_df in df.groupby('index'):
+    for component, comp_df in tqdm(df.groupby('index')):
         big_cor = comp_df[comp_df['vs group'] == 'big']['value'].values[0]
         big_component = comp_df[comp_df['vs group'] == 'big']['variable'].values[0]
         comp_df = comp_df[comp_df['vs group'] != 'big']
@@ -493,11 +492,13 @@ def biology_small(correlation, groups):
     df = pd.DataFrame.from_dict(best_scores, orient='index').transpose().sort_values(by='Score', ascending=False)
     # Remove the same values
     df = df.loc[
-        pd.DataFrame(np.sort(df[['Small Component', 'Small2 Component']], 1), index=df.index).drop_duplicates(keep='first').index]
+        pd.DataFrame(np.sort(df[['Small Component', 'Small2 Component']], 1), index=df.index).drop_duplicates(
+            keep='first').index]
     df.to_csv(f'{save_directory}/Biological_int.csv')
     # Bigger than 0.5 count it
     df = df[df['Score'] > 0.5]
-    plot_histogram(correlation, df.drop('Score', axis=1).iloc[:].values, "Biological_int")
+    color_mapper = plot_histogram(correlation, df.drop('Score', axis=1).iloc[:].values, "Biological_int")
+    return color_mapper
 
 
 def plot_histogram(correlation, columns, name_file):
@@ -552,8 +553,10 @@ def plot_histogram(correlation, columns, name_file):
     plt.savefig(f'{save_directory}/{name_file}.svg', dpi=1200,
                 bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
+    return color_mapper
 
-#TODO gaat dit goed??
+
+# TODO gaat dit goed??
 def big_vs_small(correlation, groups):
     # Count how often a estimated source correlates with another source with cutoff 0.6
     big_correlation = correlation.copy()
@@ -606,7 +609,7 @@ def big_vs_small(correlation, groups):
                 data[f"{component}_{z}"].append(np.mean(cor_values))
                 # Best components have high correlation between big and small and low between small small
                 score = data[f"{component}_{z}"][0] - data[f"{component}_{z}"][1]
-                #if score > 0.2:
+                # if score > 0.2:
                 end_results[f"{component}_{z}"] = score
     # Sort the end results to see the best components
     high_to_low = [k for k, v in sorted(end_results.items(), key=lambda item: item[1])][::-1]
@@ -639,7 +642,7 @@ def consensus_small(df, groups, credibility_dict, correlation):
     # Only leave the components with the highest credibility index
     drop_columns = []
     estimated_sources = list(consensus_df.index)
-    #TODO gaat dit goed?
+    # TODO gaat dit goed?
     while len(estimated_sources) > 0:
         # Get the components that the estimated source correlates with
         estimated_source_df = df_dcor[estimated_sources[0]].dropna()
@@ -670,26 +673,27 @@ def consensus_small(df, groups, credibility_dict, correlation):
     plt.savefig(f'{save_directory}/Consensus_Small.svg', dpi=1200)
     plt.clf()
     # See the correlation of small vs big
-    #consensus_big(df_small.loc[:, credibility_df.index], df_big, correlation)
+    # consensus_big(df_small.loc[:, credibility_df.index], df_big, correlation)
 
 
 def consensus_big(df_small, df_big, correlation):
     correlation = correlation.loc[df_big.columns, df_small.columns]
     correlation = correlation.max(axis=1)
-    fig = plt.figure(figsize=(15,5))
+    fig = plt.figure(figsize=(15, 5))
     sns.histplot(x=correlation.values, kde=True)
     plt.title(f"Correlation small vs big")
     plt.savefig(f'{save_directory}/Consensus_Small_vs_Big.svg', dpi=1200)
     plt.clf()
 
-#TODO alles opnieuw runnen
+
+# TODO alles opnieuw runnen
 # TODO testen
 if __name__ == "__main__":
     # Load the small and big data
-    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
-    #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
-    #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
-    #small_data, bigdata, lookup_columns = load_data(directory)
+    # directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
+    # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
+    # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
+    # small_data, bigdata, lookup_columns = load_data(directory)
     small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
     save_directory = '/home/MarkF/DivideConquer/ICA/Results/Cancer_type'
@@ -715,9 +719,17 @@ if __name__ == "__main__":
         # Get correlation and make only 0,1 based on cutoff
         full_correlation, full_correlation_cut_off = correlation_with_cutoff(df_full, cut_off)
         # Check how the correlation is distributed
-        #half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
-        #check_distribution(half_correlation)
-        biology_small(full_correlation, lookup_columns)
+        # half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
+        # check_distribution(half_correlation)
+        color_mapper = biology_small(full_correlation, lookup_columns)
+        # Turn it to later colors for the html plot
+        for z in color_mapper:
+            if z != 'big':
+                rgb = (int(x * 255) for x in color_mapper[z])
+                print(z)
+                print(rgb)
+                print('#%02x%02x%02x' % rgb[:3])
+
         big_vs_small(full_correlation, lookup_columns)
         # Cluster and plot
         test_df = full_correlation_cut_off.sum()
@@ -735,13 +747,13 @@ if __name__ == "__main__":
                             [:100, :100]
                             , 'Left_Corner_Heatmap')
         # Citrus plot of how the variables are correlated
-        citrus_plot(full_correlation)
+        citrus_plot(full_correlation, color_mapper)
         # Make the clusters based on the correlation
         clusters = make_clusters(full_correlation_cut_off)
         # See how the credibility is distributed
-        #credibility = get_credibility(full_correlation, directory=directory)
-        #credibility = get_credibility(full_correlation, cancer_types=True)
-        #consensus_small(df_full, lookup_columns, credibility, full_correlation)
+        # credibility = get_credibility(full_correlation, directory=directory)
+        # credibility = get_credibility(full_correlation, cancer_types=True)
+        # consensus_small(df_full, lookup_columns, credibility, full_correlation)
         # See if the correlation gets better when merging clusters
         # merge_clusters(df_full, clusters, 'clustered')
         # merge_clusters(df_full, fake_clusters, 'random')

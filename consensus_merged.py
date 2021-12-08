@@ -18,7 +18,8 @@ line_styles = {
 #           'Random': 'lightblue'}
 
 colors = {'Clustered': '#0000FF',
-          'Random': '#00FFFF'}
+          'Random': '#00FFFF',
+          'big': '#FF7F00'}
 
 
 def check_distribution(dictionairy):
@@ -39,12 +40,15 @@ def check_distribution(dictionairy):
     plt.savefig(f'Results/Pearson_distribution_Cutoff.svg', dpi=1200)
 
 
+
+
 def get_credibility(directory):
     bw_adjust = 0.5
     test = {}
     small_df, df_big, sets = load_credibility(directory['2_Clustered']['path'])
     index = [z for z in df_big.index if '_big' in z]
     credibility_values_big = df_big.loc[index, 'credibility index'].values
+    plot_df = {'big_big': credibility_values_big}
     credibility_values_big = [sum(x >= .8 for x in credibility_values_big),
                               sum(x < .8 for x in credibility_values_big)]
     save_df = []
@@ -52,18 +56,17 @@ def get_credibility(directory):
         small_df, df_big, sets = load_credibility(directory[split]['path'])
         directory[split]['Credibility'] = df_big
         consensus_index = get_consensus(directory[split])
-        # Make the histogram
-        correlation = directory[split]['Correlation']
         # Get the values not in big and in the consensus
         credibility_values = df_big.loc[consensus_index, 'credibility index'].values
+        plot_df[split] = credibility_values
         test[split] = [sum(x >= .8 for x in credibility_values), sum(x < .8 for x in credibility_values)]
         table = [credibility_values_big, test[split]]
         table = np.array(table)
         save_df.append([split, 'Big', stats.fisher_exact(table, alternative='less')[1]])
-        sns.kdeplot(x=credibility_values, color=colors[split.split('_')[1]],
-                    linestyle=line_styles[split.split('_')[0]],
-                    label=f"{split.replace('_', ' ')} \n n={len(credibility_values)}",
-                    fill=False, clip=(0, 1), bw_adjust=bw_adjust)
+    #     sns.kdeplot(x=credibility_values, color=colors[split.split('_')[1]],
+    #                 linestyle=line_styles[split.split('_')[0]],
+    #                 label=f"{split.replace('_', ' ')} \n n={len(credibility_values)}",
+    #                 fill=False, clip=(0, 1), bw_adjust=bw_adjust)
     checking = [['2_Clustered', '3_Clustered'], ['2_Clustered', '4_Clustered'], ['3_Clustered', '4_Clustered'],
                 ['2_Random', '3_Random'], ['2_Random', '4_Random'], ['3_Random', '4_Random'],
                 ['2_Random', '2_Clustered'], ['3_Random', '3_Clustered'], ['4_Clustered', '4_Random']]
@@ -73,20 +76,30 @@ def get_credibility(directory):
             table.append(test[tab])
         save_df.append([check[0], check[1], stats.fisher_exact(table, alternative='less')[1]])
     save_df = pd.DataFrame(save_df, columns=['Group 1', 'Group 2', 'Fisher exact p_value'])
-    column = [z for z in correlation.columns if '_big' in z]
-    credibility_values = df_big.loc[column, 'credibility index'].values
-    sns.kdeplot(x=credibility_values, color='#FF7F00',
-                linestyle='dotted', label=f"All Credibility \n  n={len(credibility_values)}",
-                fill=False, clip=(0, 1), bw_adjust=bw_adjust)
+    # column = [z for z in correlation.columns if '_big' in z]
+    # credibility_values = df_big.loc[column, 'credibility index'].values
+    # sns.kdeplot(x=credibility_values, color='#FF7F00',
+    #             linestyle='dotted', label=f"All Credibility \n  n={len(credibility_values)}",
+    #             fill=False, clip=(0, 1), bw_adjust=bw_adjust)
     # plt.xlim(0, 1)
-    plt.xlabel('Credibility index')
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(f'Results/Credibility_distribution_correaltions.svg', dpi=1200)
+    plot_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in plot_df.items()]))
+    plot_df = pd.melt(plot_df, value_name='Credibility Index')
+    plot_df[['number', 'tactic']] = plot_df['variable'].str.split('_', expand=True)
+    plot_violin_cred(plot_df, False)
+    plot_df = plot_df[plot_df['number'] != 'big']
+    plot_violin_cred(plot_df, True)
     save_df.to_csv('Results/Credibility_distribution_correaltions.csv', index=False)
-    plt.clf()
     consensus_vs_correlation(directory)
 
+def plot_violin_cred(df, split):
+    sns.violinplot(data=df, y='Credibility Index', x='number', hue='tactic', palette=colors,
+                   cut=0, split=split)
+    plt.xlabel('Number of splits')
+    plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
+    plt.title('Distribution of the consensus estimated components')
+    plt.tight_layout()
+    plt.savefig(f'Results/Credibility_distribution_correaltions_{split}.svg', dpi=1200)
+    plt.clf()
 
 def get_consensus(split_dictionairy):
     df = split_dictionairy['Credibility']
@@ -99,7 +112,6 @@ def get_consensus(split_dictionairy):
     correlation = correlation.loc[df_small.index, df_small.index]
     lines = correlation.reset_index().melt(id_vars='index').dropna()
     lines = lines[lines['index'].str.split('_', expand=True)[1] != lines['variable'].str.split('_', expand=True)[1]]
-    # Only leave the correlation higher than 0.8
     # Only leave the components that correlated with at least 1 other component (bigger than 1 cause diagonal)
     credibility_df = pd.DataFrame()
     drop_columns = []
@@ -161,19 +173,25 @@ def consensus_big(dictionairy):
         correlation = dictionairy[split]['Half_Correlation']
         correlation = correlation.max(axis=1)
         test[split] = correlation.values
-        sns.kdeplot(x=correlation.values, color=colors[split.split('_')[1]], linestyle=line_styles[split.split('_')[0]],
-                    label=split.replace('_', ' '))
+        # sns.kdeplot(x=correlation.values, color=colors[split.split('_')[1]], linestyle=line_styles[split.split('_')[0]],
+        #             label=split.replace('_', ' '))
     for check in tqdm(checking):
         save_df.append([check[0], check[1], stats.ttest_ind(test[check[0]], test[check[1]],
                                                             equal_var=True, alternative='greater',
                                                             permutations=100_000)[1]])
+    plot_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in test.items()]))
+    plot_df = pd.melt(plot_df, value_name='Pearson correlation')
+    plot_df[['number', 'tactic']] = plot_df['variable'].str.split('_', expand=True)
+    sns.violinplot(data=plot_df, y='Pearson correlation', x='number', hue='tactic', palette=colors,
+                   cut=2, split=True)
     save_df = pd.DataFrame(save_df, columns=['Group 1', 'Group 2', 'Welsh p_value'])
     plt.title(f"Density plot of highest correlation for every estimated source \n in the sample data")
-    plt.xlabel("Pearson's correlation")
-    plt.legend()
+    plt.xlabel("Number of splits")
+    plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
     plt.savefig(f'Results/Pearson_distribution_KDE.svg', dpi=1200, bbox_inches='tight')
     save_df.to_csv('Results/Pearson_distribution_test.csv', index=False)
     sns.set(font_scale=1)
+
 
 def check_citrus(dictionairy):
     # output_file(filename=f"{save_directory}/citrusPlot.html")
@@ -226,7 +244,7 @@ if __name__ == "__main__":
         files[directory[0]]['Half_Correlation'] = calculate_correlation(files[directory[0]]['Big small data'],
                                                                         files[directory[0]]['Big data'],
                                                                         files[directory[0]]['Correlation'])
-    check_citrus(files)
+    #check_citrus(files)
     get_credibility(files)
-    consensus_big(files)
-    check_distribution(files)
+    #consensus_big(files)
+    #check_distribution(files)
