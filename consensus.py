@@ -372,7 +372,6 @@ def citrus_plot(correlation, colors_mapped):
     )
     chord = chord.redim.range(color=(0, 1))
     hv.save(chord, f'{save_directory}/citrusPlot.png')
-    sys.exit()
 
 
 def load_credibility(directory):
@@ -691,12 +690,12 @@ def consensus_big(df_small, df_big, correlation):
 if __name__ == "__main__":
     # Load the small and big data
     # directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
-    # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
+    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
     # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
-    # small_data, bigdata, lookup_columns = load_data(directory)
-    small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
+    small_data, bigdata, lookup_columns = load_data(directory)
+    #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Cancer_type'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/2_Split'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
@@ -755,5 +754,5 @@ if __name__ == "__main__":
         # credibility = get_credibility(full_correlation, cancer_types=True)
         # consensus_small(df_full, lookup_columns, credibility, full_correlation)
         # See if the correlation gets better when merging clusters
-        # merge_clusters(df_full, clusters, 'clustered')
+        merge_clusters(df_full, clusters, 'clustered')
         # merge_clusters(df_full, fake_clusters, 'random')
