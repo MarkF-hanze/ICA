@@ -204,11 +204,19 @@ def check_citrus(dictionairy):
         lines = correlation.reset_index().melt(id_vars='index').dropna()
         # Drop the duplicates that like ab ba because correlation was mirrored
         lines = lines[lines['index'].str.split('_', expand=True)[1] != lines['variable'].str.split('_', expand=True)[1]]
-        lines = lines[(~lines['index'].str.contains('big')) & (~lines['variable'].str.contains('big'))]
         lines = lines.loc[
             pd.DataFrame(np.sort(lines[['index', 'variable']], 1), index=lines.index).drop_duplicates(
                 keep='first').index]
-        test[split] = [sum(x >= .6 for x in lines['value']), sum(x < .6 for x in lines['value'])]
+        # Drop the big components for the test
+        test[split] = lines[(~lines['index'].str.contains('big')) & (~lines['variable'].str.contains('big'))]
+        test[split] = [sum(x >= .6 for x in test[split]['value']), sum(x < .6 for x in test[split]['value'])]
+        # See how many lines go to big
+        big = lines[(lines['index'].str.contains('big')) | (lines['variable'].str.contains('big'))]
+        big['index'] = big['index'].str.split('_', expand=True)[1]
+        big['variable'] = big['variable'].str.split('_', expand=True)[1]
+        big = big[big['value'] >= .6]
+        big = big.groupby(['index', 'variable']).count()
+        big.to_csv(f'Results/CitrusCount_{split}.csv', index=True)
     checking = [['2_Clustered', '2_Random'], ['3_Clustered', '3_Random'], ['4_Clustered', '4_Random']]
     save_df = []
     for check in checking:
@@ -244,7 +252,7 @@ if __name__ == "__main__":
         files[directory[0]]['Half_Correlation'] = calculate_correlation(files[directory[0]]['Big small data'],
                                                                         files[directory[0]]['Big data'],
                                                                         files[directory[0]]['Correlation'])
-    #check_citrus(files)
+    check_citrus(files)
     get_credibility(files)
     #consensus_big(files)
     #check_distribution(files)
