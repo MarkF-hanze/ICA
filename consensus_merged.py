@@ -40,8 +40,6 @@ def check_distribution(dictionairy):
     plt.savefig(f'Results/Pearson_distribution_Cutoff.svg', dpi=1200)
 
 
-
-
 def get_credibility(directory):
     bw_adjust = 0.5
     test = {}
@@ -52,10 +50,12 @@ def get_credibility(directory):
     credibility_values_big = [sum(x >= .8 for x in credibility_values_big),
                               sum(x < .8 for x in credibility_values_big)]
     save_df = []
+    save_df_1 = []
     for split in directory:
         small_df, df_big, sets = load_credibility(directory[split]['path'])
         directory[split]['Credibility'] = df_big
         consensus_index = get_consensus(directory[split])
+        save_df_1.append([split, len(set(consensus_index))])
         # Get the values not in big and in the consensus
         credibility_values = df_big.loc[consensus_index, 'credibility index'].values
         plot_df[split] = credibility_values
@@ -76,6 +76,8 @@ def get_credibility(directory):
             table.append(test[tab])
         save_df.append([check[0], check[1], stats.fisher_exact(table, alternative='less')[1]])
     save_df = pd.DataFrame(save_df, columns=['Group 1', 'Group 2', 'Fisher exact p_value'])
+    save_df_1 = pd.DataFrame(save_df_1, columns=['Split', 'Consensus count'])
+    save_df_1.to_csv('Results/Estimated_sources_count.csv', index=False)
     # column = [z for z in correlation.columns if '_big' in z]
     # credibility_values = df_big.loc[column, 'credibility index'].values
     # sns.kdeplot(x=credibility_values, color='#FF7F00',

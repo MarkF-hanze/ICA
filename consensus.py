@@ -326,9 +326,8 @@ def citrus_plot(correlation, colors_mapped):
     # lines['color'] = [0 if z < 0.8 else z for z in lines['value']]
     lines['color'] = [z for z in lines['value']]
     lines['alpha'] = [z for z in lines['value']]
-    # lines['width'] = [.5 if z < 0.8 else 5 for z in lines['value']]
-    # lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
-    lines['width'] = [.1 if z < 0.6 else .9 for z in lines['value']]
+    lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
+    #lines['width'] = [.1 if z < 0.6 else .9 for z in lines['value']]
     # lines['width'] = .3
     lines['value'] = 1
     lines['value'] = lines['value'].astype(int)
@@ -689,13 +688,16 @@ def consensus_big(df_small, df_big, correlation):
 # TODO testen
 if __name__ == "__main__":
     # Load the small and big data
-    # directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/4_Split/'
-    directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
+    directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/2_Split/'
+    #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
     # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
-    small_data, bigdata, lookup_columns = load_data(directory)
+    small_data, bigdata, lookup_columns = load_data(directory,
+                                                    '/home/MarkF/DivideConquer/Results/MathExperiment/0_Credibility/'
+                                                    'ica_independent_components_consensus.tsv')
     #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/2_Split'
+    #save_directory = '/home/MarkF/DivideConquer/ICA/Results/Random/2_Split'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/0_Cred'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):

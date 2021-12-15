@@ -48,7 +48,6 @@ class Pipeline:
         return df
 
     def load_immune(self):
-        pd.read_csv('/home/MarkF/DivideConquer/Tacna_confic/reactome_immune_gene_sets.tsv')
         immune_df_reactome = pd.read_csv('/home/MarkF/DivideConquer/Tacna_confic/reactome_immune_gene_sets.tsv',
                                          sep='\t')
         immune_df_gobp = pd.read_csv(
@@ -84,9 +83,10 @@ class Pipeline:
         shape = test_df.shape
         # TODO What is the number of tests?
         # Bonferroni correction
-        value = st.norm.ppf(0.05 / (shape[0] * shape[1]))
+        #value = st.norm.ppf(0.05 / (shape[0] * shape[1]))
         test_df = test_df.abs()
-        test_df = (test_df > abs(value))
+        #test_df = (test_df > abs(value))
+        test_df = (test_df > 3)
         # See of any value in the row is still significant (So higher than corrected value) and only keep those
         df['Any_Sig'] = test_df.sum(axis=1) > 0
         test_df = test_df[test_df.sum(axis=1) > 0]
