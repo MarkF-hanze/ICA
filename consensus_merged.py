@@ -8,6 +8,7 @@ from matplotlib.gridspec import GridSpec
 import seaborn as sns
 import sys
 from tqdm import tqdm
+import dcor
 
 line_styles = {
     '2': '-',

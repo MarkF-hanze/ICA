@@ -46,14 +46,14 @@ def load_data(load_directory,
     group_columns = {}
     for entry in os.scandir(load_directory):
         if 'ICARUN_SPLIT' in entry.path:
-            for file in os.scandir(entry):
-                if 'ica_independent_components_consensus.tsv' in file.path:
-                    i = file.path.split('/')[-2][-1]
-                    df = pd.read_csv(file.path, sep='\t', index_col=0)
-                    print(f"Number of components split {i}: {df.shape[1]}")
-                    df.columns = [f'{x}_s{i}' for x in df.columns]
-                    group_columns[f's{i}'] = list(df.columns)
-                    small_df.append(df)
+                for file in os.scandir(entry):
+                    if 'ica_independent_components_consensus.tsv' in file.path:
+                        i = file.path.split('/')[-2][-1]
+                        df = pd.read_csv(file.path, sep='\t', index_col=0)
+                        print(f"Number of components split {i}: {df.shape[1]}")
+                        df.columns = [f'{x}_s{i}' for x in df.columns]
+                        group_columns[f's{i}'] = list(df.columns)
+                        small_df.append(df)
     all_data = load_big(big_path)
     group_columns[f'big'] = list(all_data.columns)
     return small_df, all_data, group_columns
@@ -70,16 +70,17 @@ def load_cancer_type(load_directory,
     group_columns = {}
     for cancer_type in os.scandir(load_directory):
         if 'All_Cancer' not in cancer_type.path:
-            for entry in os.scandir(cancer_type):
-                if 'ICARUN' in entry.path:
-                    for file in os.scandir(entry):
-                        if 'ica_independent_components_consensus.tsv' in file.path:
-                            i = cancer_type.path.split('/')[-1].replace('_', ' ')
-                            df = pd.read_csv(file.path, sep='\t', index_col=0)
-                            print(f"Number of components split {i}: {df.shape[1]}")
-                            df.columns = [f'{x}_{i}' for x in df.columns]
-                            group_columns[f'{i}'] = list(df.columns)
-                            small_df.append(df)
+            if os.path.isdir(cancer_type):
+                for entry in os.scandir(cancer_type):
+                    if 'ICARUN' in entry.path:
+                        for file in os.scandir(entry):
+                            if 'ica_independent_components_consensus.tsv' in file.path:
+                                i = cancer_type.path.split('/')[-1].replace('_', ' ')
+                                df = pd.read_csv(file.path, sep='\t', index_col=0)
+                                print(f"Number of components split {i}: {df.shape[1]}")
+                                df.columns = [f'{x}_{i}' for x in df.columns]
+                                group_columns[f'{i}'] = list(df.columns)
+                                small_df.append(df)
     all_data = load_big(big_path)
     group_columns[f'big'] = list(all_data.columns)
     return small_df, all_data, group_columns
