@@ -242,5 +242,5 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 500)
     # pd.set_option('display.width', 1000)
     pipeline = Pipeline()
-    #pipeline.start_analysis()
-    pipeline.mixing_matrix()
+    pipeline.start_analysis()
+    #pipeline.mixing_matrix()
