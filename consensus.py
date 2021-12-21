@@ -46,14 +46,14 @@ def load_data(load_directory,
     group_columns = {}
     for entry in os.scandir(load_directory):
         if 'ICARUN_SPLIT' in entry.path:
-                for file in os.scandir(entry):
-                    if 'ica_independent_components_consensus.tsv' in file.path:
-                        i = file.path.split('/')[-2][-1]
-                        df = pd.read_csv(file.path, sep='\t', index_col=0)
-                        print(f"Number of components split {i}: {df.shape[1]}")
-                        df.columns = [f'{x}_s{i}' for x in df.columns]
-                        group_columns[f's{i}'] = list(df.columns)
-                        small_df.append(df)
+            for file in os.scandir(entry):
+                if 'ica_independent_components_consensus.tsv' in file.path:
+                    i = file.path.split('/')[-2][-1]
+                    df = pd.read_csv(file.path, sep='\t', index_col=0)
+                    print(f"Number of components split {i}: {df.shape[1]}")
+                    df.columns = [f'{x}_s{i}' for x in df.columns]
+                    group_columns[f's{i}'] = list(df.columns)
+                    small_df.append(df)
     all_data = load_big(big_path)
     group_columns[f'big'] = list(all_data.columns)
     return small_df, all_data, group_columns
@@ -71,16 +71,14 @@ def load_cancer_type(load_directory,
     for cancer_type in os.scandir(load_directory):
         if 'All_Cancer' not in cancer_type.path:
             if os.path.isdir(cancer_type):
-                for entry in os.scandir(cancer_type):
-                    if 'ICARUN' in entry.path:
-                        for file in os.scandir(entry):
-                            if 'ica_independent_components_consensus.tsv' in file.path:
-                                i = cancer_type.path.split('/')[-1].replace('_', ' ')
-                                df = pd.read_csv(file.path, sep='\t', index_col=0)
-                                print(f"Number of components split {i}: {df.shape[1]}")
-                                df.columns = [f'{x}_{i}' for x in df.columns]
-                                group_columns[f'{i}'] = list(df.columns)
-                                small_df.append(df)
+                for file in os.scandir(f'{cancer_type.path}/ICARUN'):
+                    if 'ica_independent_components_consensus.tsv' in file.path:
+                        i = cancer_type.path.split('/')[-1].replace('_', ' ')
+                        df = pd.read_csv(file.path, sep='\t', index_col=0)
+                        print(f"Number of components split {i}: {df.shape[1]}")
+                        df.columns = [f'{x}_{i}' for x in df.columns]
+                        group_columns[f'{i}'] = list(df.columns)
+                        small_df.append(df)
     all_data = load_big(big_path)
     group_columns[f'big'] = list(all_data.columns)
     return small_df, all_data, group_columns
@@ -275,8 +273,9 @@ def create_fakes(nodes, lines, fake_count, colors_mapped):
         fake_df['Components'] = vector
         vector = list(np.repeat('', df.shape[0]))
         fake_df['text'] = ''
-        #vector[df.shape[0] // 2] = name
-        vector[df.shape[0] // 2] = ''
+        print(name)
+        vector[df.shape[0] // 2] = name
+        #vector[df.shape[0] // 2] = ''
         df['text'] = vector
         new_df = pd.concat([new_df, df, fake_df])
         all_fakes = pd.concat([fake_df, all_fakes])
@@ -309,7 +308,6 @@ def get_sum(lines, bigger):
     summed = pd.DataFrame(list(total_value.items()), columns=['Components', 'value'])
     return summed
 
-
 def citrus_plot(correlation, colors_mapped):
     # output_file(filename=f"{save_directory}/citrusPlot.html")
     # Remove diagonal and values smaller than cutoff
@@ -328,8 +326,12 @@ def citrus_plot(correlation, colors_mapped):
     # lines['color'] = [0 if z < 0.8 else z for z in lines['value']]
     lines['color'] = [z for z in lines['value']]
     lines['alpha'] = [z for z in lines['value']]
+    # Runs compare
+    lines['width'] = 1
+    # Math experiment
     #lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
-    lines['width'] = [.08 if z < 0.6 else .9 for z in lines['value']]
+    # Cancer settings
+   # lines['width'] = [.08 if z < 0.6 else .9 for z in lines['value']]
     # lines['width'] = .3
     lines['value'] = 1
     lines['value'] = lines['value'].astype(int)
@@ -368,7 +370,7 @@ def citrus_plot(correlation, colors_mapped):
         opts.Chord(edge_color='color', edge_cmap=color_pallet, edge_alpha='alpha',
                    height=2000, labels='text', node_color='node_color', label_text_color='node_color',
                    width=2000, colorbar=True, edge_line_width='width', node_marker='none', node_radius=5,
-                   label_text_font_size='10px', colorbar_position='top',
+                   label_text_font_size='100px', colorbar_position='top',
                    colorbar_opts={'width': 500, 'title': 'Pearson correlation'}),
     )
     chord = chord.redim.range(color=(0, 1))
@@ -409,15 +411,13 @@ def load_credibility_cancer():
     sets = []
     for cancer_type in os.scandir('/home/MarkF/DivideConquer/Results/GPL570'):
         if 'All_Cancer' not in cancer_type.path:
-            for entry in os.scandir(cancer_type):
-                if 'ICARUN' in entry.path:
-                    for file in os.scandir(entry):
-                        if 'ica_robustness_metrics_independent_components_consensus.tsv' in file.path:
-                            i = cancer_type.path.split('/')[-1].replace('_', ' ')
-                            df = pd.read_csv(file.path, sep='\t', index_col=0)
-                            df.index = [f'{x}_{i}' for x in df.index]
-                            small_df.append(df)
-                            sets.append(i)
+            for file in os.scandir(f'{cancer_type.path}/ICARUN'):
+                if 'ica_robustness_metrics_independent_components_consensus.tsv' in file.path:
+                    i = cancer_type.path.split('/')[-1].replace('_', ' ')
+                    df = pd.read_csv(file.path, sep='\t', index_col=0)
+                    df.index = [f'{x}_{i}' for x in df.index]
+                    small_df.append(df)
+                    sets.append(i)
     # Change index
     all_data = pd.read_csv(
         '/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
@@ -695,7 +695,7 @@ def consensus_big(df_small, df_big, correlation):
 if __name__ == "__main__":
     # Load the small and big data
     directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/2_Split/'
-    #directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
+    # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
     # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
     # small_data, bigdata, lookup_columns = load_data(directory,
     #                                                 '/home/MarkF/DivideConquer/Results/MathExperiment/0_Credibility/'
@@ -703,7 +703,7 @@ if __name__ == "__main__":
     small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
     save_directory = '/home/MarkF/DivideConquer/ICA/Results/Cancer_type'
-    #save_directory = '/home/MarkF/DivideConquer/ICA/Results/0_Cred'
+    # save_directory = '/home/MarkF/DivideConquer/ICA/Results/0_Cred'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
