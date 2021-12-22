@@ -165,7 +165,7 @@ def consensus_vs_correlation(directory):
 
 
 def consensus_big(dictionairy):
-    sns.set(font_scale=2.4)
+    sns.set(font_scale=2.4, style='whitegrid')
     fig = plt.figure(figsize=(15, 5))
     test = {}
     save_df = []
@@ -176,6 +176,8 @@ def consensus_big(dictionairy):
         correlation = dictionairy[split]['Half_Correlation']
         correlation = correlation.max(axis=1)
         test[split] = correlation.values
+        print(split)
+        print(correlation.values.mean())
         # sns.kdeplot(x=correlation.values, color=colors[split.split('_')[1]], linestyle=line_styles[split.split('_')[0]],
         #             label=split.replace('_', ' '))
     for check in tqdm(checking):
@@ -257,5 +259,5 @@ if __name__ == "__main__":
                                                                         files[directory[0]]['Correlation'])
     check_citrus(files)
     get_credibility(files)
-    #consensus_big(files)
-    #check_distribution(files)
+    consensus_big(files)
+    check_distribution(files)
