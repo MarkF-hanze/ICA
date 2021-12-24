@@ -1,36 +1,43 @@
 import pandas as pd
+import numpy as np
 import os
 import sys
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import matplotlib.patches as mpatches
-import numpy as np
-from scipy.cluster.hierarchy import linkage, leaves_list
-from collections import defaultdict
-from bokeh.plotting import figure, show, ColumnDataSource, output_file, save
-from bokeh.palettes import Blues256, Set1, Category20
-from bokeh.io import export_png, export_svgs
+from bokeh.plotting import figure, ColumnDataSource
+from bokeh.palettes import Blues256, Category20
 import holoviews as hv
 from holoviews import opts
+from bokeh.io import export_png, export_svgs
+
+from scipy.cluster.hierarchy import linkage, leaves_list
 import dcor
+
+from collections import defaultdict
 from tqdm import tqdm
 import random
 import itertools
+
+from Correlation import Correlation
+from LoadData import LoadICARuns
+from BiologicalInterpertation import MergeTwo
 
 hv.extension('bokeh')
 pd.set_option('display.max_columns', None)
 
 
-# TODO what to do when theer are 2 components
-# TODO laatste check met cutoff 0.5
-
 def load_big(path):
-    """Load the big data file and rename the columns to fit with the other dataframes
+    """
+    Helper function to load the big data file and rename the columns to fit with the other dataframes.
+    Every column should be splitted with the name as underbracket
      """
     all_data = pd.read_csv(
         path, sep='\t', index_col=0)
     print(f'Number of components All data: {all_data.shape[1]}')
+    # Make the columns unique so they later can be added to the same dataframe
     all_data.columns = [f'{x}_big' for x in all_data.columns]
     return all_data
 
@@ -38,89 +45,79 @@ def load_big(path):
 def load_data(load_directory,
               big_path='/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized/ICARUN_ALL/'
                        'ica_independent_components_consensus.tsv'):
-    """Load the math experiment data. This function loads ether the clustered or the random split.
+    """
+    Load the math experiment data. This function loads ether the clustered or the random split.
     load_directory is the folder that contains the split
     big_path contains the file with all components
      """
+    # List to save the small splits
     small_df = []
+    # List to save the name of each split
     group_columns = {}
+    # Loop over the directory
     for entry in os.scandir(load_directory):
+        # Load the information of the seperate splits these clusters should be called 'ICARUN_SPLIT'
         if 'ICARUN_SPLIT' in entry.path:
+            # Loop over all the files and find the independent component consensus
+            # TODO this doesnt have to be in a for loop
             for file in os.scandir(entry):
                 if 'ica_independent_components_consensus.tsv' in file.path:
+                    # Get the split name
                     i = file.path.split('/')[-2][-1]
+                    # Load the component
                     df = pd.read_csv(file.path, sep='\t', index_col=0)
+                    # Print it to check
                     print(f"Number of components split {i}: {df.shape[1]}")
+                    # Set the names as the split type
+                    # TODO REMOVE THE s
                     df.columns = [f'{x}_s{i}' for x in df.columns]
+                    # Add id and dataframe to the relative listst
                     group_columns[f's{i}'] = list(df.columns)
                     small_df.append(df)
+    # Load the big dataset
     all_data = load_big(big_path)
     group_columns[f'big'] = list(all_data.columns)
     return small_df, all_data, group_columns
 
 
+# Specific function to load cancer type information because of different formatting
+# only used for paper can be removed in final build
 def load_cancer_type(load_directory,
                      big_path='/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
                               'ica_independent_components_consensus.tsv'):
-    """Load the cancer ICA data.
+    """
+    Load the cancer ICA data.
     load_directory is the folder that contains the split
     big_path contains the file with all components
      """
+    # List to save the small splits
     small_df = []
+    # List to save the name of each split
     group_columns = {}
+    # Loop over the cancer type folder
     for cancer_type in os.scandir(load_directory):
+        # For this specific case do not load all cancer data
         if 'All_Cancer' not in cancer_type.path:
+            # Also do not load any files that may be present
             if os.path.isdir(cancer_type):
+                # TODO this doesnt have to be in a for loop
+                # Search th consensus file
                 for file in os.scandir(f'{cancer_type.path}/ICARUN'):
                     if 'ica_independent_components_consensus.tsv' in file.path:
+                        # Get the name of the cancer type
                         i = cancer_type.path.split('/')[-1].replace('_', ' ')
+                        # Load the file
                         df = pd.read_csv(file.path, sep='\t', index_col=0)
+                        # Print for the check
                         print(f"Number of components split {i}: {df.shape[1]}")
+                        # Give the column a unique name and add the relative values to the correct list
                         df.columns = [f'{x}_{i}' for x in df.columns]
                         group_columns[f'{i}'] = list(df.columns)
                         small_df.append(df)
+    # Load the big dataset
     all_data = load_big(big_path)
     group_columns[f'big'] = list(all_data.columns)
     return small_df, all_data, group_columns
-
-
-def calculate_correlation(df1, df2, correlation):
-    half_corr = correlation.loc[df2.columns, df1.columns]
-    return half_corr
-
-
-def check_distribution(df):
-    df = df.copy()
-    df[df == 0] = 0.000000000000001
-    fig = plt.figure(constrained_layout=True)
-    gs = GridSpec(3, 2, figure=fig)
-    ax3 = fig.add_subplot(gs[0, :])
-    ax4 = fig.add_subplot(gs[1, :])
-    ax1 = fig.add_subplot(gs[2:, 0])
-    ax2 = fig.add_subplot(gs[2, 1])
-    values = df.values.ravel()
-    ax3.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 0.9, 1])
-    ax2.set_title('Distribution pearson correlation')
-    ax1.set_title('Log Distribution pearson correlation')
-    sns.histplot(x=values, log_scale=False, kde=False, color='red', stat='density', ax=ax2)
-    sns.histplot(x=values, log_scale=True, kde=True, color='red', stat='density', ax=ax1)
-    sns.boxplot(x=values, ax=ax3)
-    xs = np.linspace(0.0, 0.9, 10)
-    ys = []
-    for x in xs:
-        ys.append(df[df >= x].dropna(how="all").shape[0])
-    ax4.plot(xs, ys, marker='o')
-    ax4.set_title(f'Amount of big components that correlate with small n = {df.shape[0]}')
-    ax3.set_title(f'Appearance of every correlation between \n big and small estimated sources')
-    ax4.set_xlabel("Pearson's cutoff")
-    ax4.set_ylabel('Consensus count')
-    ax4.grid(axis='both')
-    # ax3.set_xlabel("Pearson's cutoff")
-    ax3.get_shared_x_axes().join(ax3, ax4)
-    plt.tight_layout()
-    plt.savefig(f'{save_directory}/Pearson_distribution.png', dpi=1200)
-    plt.clf()
-
 
 def correlation_with_cutoff(df, stopping_point):
     correlation = np.corrcoef(df.values, rowvar=False)
@@ -133,6 +130,9 @@ def correlation_with_cutoff(df, stopping_point):
 
 
 def make_clusters(df):
+    """
+    Insert correlation matrix with only 0 and 1 with a certain cutoff
+    """
     df['Count'] = df.sum(axis=1)
     df = df.sort_values('Count', axis=0, ascending=False)
     temp_df = df.copy()
@@ -275,7 +275,7 @@ def create_fakes(nodes, lines, fake_count, colors_mapped):
         fake_df['text'] = ''
         print(name)
         vector[df.shape[0] // 2] = name
-        #vector[df.shape[0] // 2] = ''
+        # vector[df.shape[0] // 2] = ''
         df['text'] = vector
         new_df = pd.concat([new_df, df, fake_df])
         all_fakes = pd.concat([fake_df, all_fakes])
@@ -308,6 +308,7 @@ def get_sum(lines, bigger):
     summed = pd.DataFrame(list(total_value.items()), columns=['Components', 'value'])
     return summed
 
+
 def citrus_plot(correlation, colors_mapped):
     # output_file(filename=f"{save_directory}/citrusPlot.html")
     # Remove diagonal and values smaller than cutoff
@@ -329,9 +330,9 @@ def citrus_plot(correlation, colors_mapped):
     # Runs compare
     lines['width'] = 1
     # Math experiment
-    #lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
+    # lines['width'] = [.3 if z < 0.6 else .9 for z in lines['value']]
     # Cancer settings
-   # lines['width'] = [.08 if z < 0.6 else .9 for z in lines['value']]
+    # lines['width'] = [.08 if z < 0.6 else .9 for z in lines['value']]
     # lines['width'] = .3
     lines['value'] = 1
     lines['value'] = lines['value'].astype(int)
@@ -377,98 +378,20 @@ def citrus_plot(correlation, colors_mapped):
     hv.save(chord, f'{save_directory}/citrusPlot.png')
     plot_state = hv.renderer('bokeh').get_plot(chord).state
     plot_state.output_backend = 'svg'
-    export_svgs(plot_state, filename=f'{save_directory}/citrusPlot.svg')
-    sys.exit()
+    #export_svgs(plot_state, filename=f'{save_directory}/citrusPlot.svg')
 
 
-def load_credibility(directory):
-    # Load the different credibility scores
-    small_df = []
-    sets = []
-    for entry in os.scandir(directory):
-        if 'ICARUN_SPLIT' in entry.path:
-            for file in os.scandir(entry):
-                if 'ica_robustness_metrics_independent_components_consensus.tsv' in file.path:
-                    z = file.path.split('/')[-2][-1]
-                    df = pd.read_csv(file.path, sep='\t', index_col=0)
-                    df.index = [f'{q}_s{z}' for q in df.index]
-                    small_df.append(df)
-                    sets.append(f's{z}')
-    # Change index
-    all_data = pd.read_csv(
-        '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized/ICARUN_ALL/'
-        'ica_robustness_metrics_independent_components_consensus.tsv', sep='\t', index_col=0)
-    all_data.index = [f'{z}_big' for z in all_data.index]
-    sets.append(f'big')
-    small_df.append(all_data)
-    df_big = pd.concat(small_df)
-    return small_df, df_big, sets
 
 
-def load_credibility_cancer():
-    # Load the different credibility scores
-    small_df = []
-    sets = []
-    for cancer_type in os.scandir('/home/MarkF/DivideConquer/Results/GPL570'):
-        if 'All_Cancer' not in cancer_type.path:
-            for file in os.scandir(f'{cancer_type.path}/ICARUN'):
-                if 'ica_robustness_metrics_independent_components_consensus.tsv' in file.path:
-                    i = cancer_type.path.split('/')[-1].replace('_', ' ')
-                    df = pd.read_csv(file.path, sep='\t', index_col=0)
-                    df.index = [f'{x}_{i}' for x in df.index]
-                    small_df.append(df)
-                    sets.append(i)
-    # Change index
-    all_data = pd.read_csv(
-        '/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
-        'ica_robustness_metrics_independent_components_consensus.tsv', sep='\t', index_col=0)
-    all_data.index = [f'{z}_big' for z in all_data.index]
-    sets.append(f'big')
-    small_df.append(all_data)
-    df_big = pd.concat(small_df)
-    return small_df, df_big, sets
 
-
-def get_credibility(correlation, directory=None, cancer_types=False):
-    if cancer_types:
-        small_df, df_big, sets = load_credibility_cancer()
-    else:
-        small_df, df_big, sets = load_credibility(directory)
-    # Get the distribution of all the components and the credibility index
-    all_values = {}
-    for s, df in zip(sets, small_df):
-        all_values[s] = df[f'credibility index']
-
-    # Get the distribution of only the variables that have consensus
-    leave_correlations = [0, 0.8]
-    # Make the histogram
-    cm = plt.get_cmap('tab10')
-    for small_set in all_values:
-        for color, value in enumerate(leave_correlations):
-            column = [z for z in correlation.columns if z not in all_values[small_set].index]
-            set_correlation = correlation.loc[all_values[small_set].index, column]
-            set_correlation = set_correlation.max(axis=1)
-            set_correlation = set_correlation[set_correlation > value]
-            set_correlation = all_values[small_set][list(set_correlation.index)].values
-            sns.kdeplot(x=set_correlation, label=f'Correlation higher than {value} \nn={len(set_correlation)}',
-                        color=cm(color), fill=True,
-                        alpha=.4)
-        plt.xlim(0, 1)
-        plt.xlabel('Credibility index')
-        plt.legend(loc='upper left')
-        plt.title(f'Credibility index consensus vs non consensus \nSet {small_set}')
-        plt.tight_layout()
-        plt.savefig(f'{save_directory}/Credibility_distribution_{small_set}.svg', dpi=1200)
-        plt.clf()
-    return all_values
-
-
-def biology_small(correlation, groups):
+def biology_small(correlation):
     df = correlation.reset_index().melt(id_vars='index').dropna()
     df = df[df['index'].str.split('_', expand=True)[1] != df['variable'].str.split('_', expand=True)[1]]
     df['vs group'] = df['variable'].str.split('_', expand=True)[1].values
-    df = df[~df['index'].isin(groups['big'])]
-    df = df[df.groupby(['index', 'vs group'])['value'].transform(max) == df['value']]
+    df = df[~df['index'].str.contains('big')]
+    #df = df[df.groupby(['index', 'vs group'])['value'].transform(max) == df['value']]
+    print(df)
+    sys.exit()
     best_scores = {
         'Small Component': [],
         'Big Component': [],
@@ -561,7 +484,7 @@ def plot_histogram(correlation, columns, name_file):
 
 
 # TODO gaat dit goed??
-def big_vs_small(correlation, groups):
+def big_vs_small(correlation):
     # Count how often a estimated source correlates with another source with cutoff 0.6
     big_correlation = correlation.copy()
     big_correlation[big_correlation < 0.6] = np.nan
@@ -574,9 +497,11 @@ def big_vs_small(correlation, groups):
     # Only leave components that correlate with at least 2 others (bigger than 2 because it also correlated with
     # itself)
     big_component = big_component[big_component > 2]
-    loop = set(groups["big"]).intersection(set(big_component.index))
+    all_big_components = [i for i in correlation.columns if "big" in i]
+    loop = set(all_big_components).intersection(set(big_component.index))
     for component in tqdm(loop):
         # Get the big source and the highly correlated sources and drop the big component
+        print(big_correlation.loc[component].dropna())
         with_duplicated_df = pd.DataFrame(big_correlation.loc[component].dropna().drop(component))
         with_duplicated_df["Group"] = with_duplicated_df.reset_index()["index"].str.split(
             "_", expand=True).iloc[:, 1].values
@@ -622,145 +547,66 @@ def big_vs_small(correlation, groups):
     plot_histogram(correlation, input_figure, "EC_splitted")
 
 
-# Remove the consensus between small components
-def consensus_small(df, groups, credibility_dict, correlation):
-    # All small components
-    df_small = df.drop(groups['big'], axis=1)
-    # All big components
-    df_big = df.loc[:, groups['big']]
-    # Get the distance correlation between all combinations of small components
-    df_dcor = correlation.loc[df_small.columns, df_small.columns]
-    # Make a copy of the heavy calculation
-    df_dcor_original = df_dcor.copy()
-    # Only leave the correlation higher than 0.8
-    df_dcor = df_dcor[df_dcor > 0.8]
-    # Count for every component how often it appears
-    consensus_df = df_dcor.count()
-    # Only leave the components that correlated with at least 1 other component (bigger than 1 cause diagonal)
-    consensus_df = consensus_df[consensus_df > 1].sort_values(ascending=False)
-    credibility_df = pd.DataFrame()
-    # Merge all different credibility indices together
-    for group in credibility_dict:
-        if group != 'big':
-            credibility_df = pd.concat([credibility_df, credibility_dict[group]], ignore_index=False, axis=0)
-    # Only leave the components with the highest credibility index
-    drop_columns = []
-    estimated_sources = list(consensus_df.index)
-    # TODO gaat dit goed?
-    while len(estimated_sources) > 0:
-        # Get the components that the estimated source correlates with
-        estimated_source_df = df_dcor[estimated_sources[0]].dropna()
-        all_correlated = list(estimated_source_df.index)
-        all_correlated.append(estimated_sources[0])
-        # Remove these components from the estimated sources
-        estimated_sources = [z for z in estimated_sources if z not in all_correlated]
-        # Only leave the column with the highest credibility index
-        drop_columns.extend(list(credibility_df.loc[all_correlated, :].sort_values(
-            by=0, ascending=False).iloc[1:].index))
-    # Drop the components that have a consensus
-    df_dcor_original = df_dcor_original.drop(set(drop_columns), axis=0)
-    df_dcor_original = df_dcor_original.drop(set(drop_columns), axis=1)
-    credibility_df = credibility_df.loc[df_dcor_original.columns, :]
-    # Melt the dataframe and clean the duplicated
-    df_dcor_original = df_dcor_original.reset_index().melt(id_vars='index')
-    df_dcor_original = df_dcor_original.loc[pd.DataFrame(np.sort(
-        df_dcor_original[['index', 'variable']], 1), index=df_dcor_original.index).drop_duplicates(keep='first').index]
-    df_dcor_original = df_dcor_original[df_dcor_original['index'] != df_dcor_original['variable']]
-    # Histogram of the left over correlations
-    fig, ax = plt.subplots(1, 2, figsize=(15, 5))
-    fig.suptitle(f'Small consensus variables n = {len(set(df_dcor_original[["index", "variable"]].values.ravel()))}')
-    sns.histplot(data=df_dcor_original, x='value', kde=True, ax=ax[0])
-    credibility_df.columns = ['Credibility index']
-    sns.histplot(data=credibility_df, x='Credibility index', kde=True, ax=ax[1])
-    ax[0].set_title("Correlation distribution consensus variables")
-    ax[1].set_title("Credibility index consensus variables")
-    plt.savefig(f'{save_directory}/Consensus_Small.svg', dpi=1200)
-    plt.clf()
-    # See the correlation of small vs big
-    # consensus_big(df_small.loc[:, credibility_df.index], df_big, correlation)
-
-
-def consensus_big(df_small, df_big, correlation):
-    correlation = correlation.loc[df_big.columns, df_small.columns]
-    correlation = correlation.max(axis=1)
-    fig = plt.figure(figsize=(15, 5))
-    sns.histplot(x=correlation.values, kde=True)
-    plt.title(f"Correlation small vs big")
-    plt.savefig(f'{save_directory}/Consensus_Small_vs_Big.svg', dpi=1200)
-    plt.clf()
-
-
 # TODO alles opnieuw runnen
 # TODO testen
 if __name__ == "__main__":
     # Load the small and big data
-    directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/2_Split/'
+    #directory = '/home/MarkF/DivideConquer/Results/Math_Clustered/2_Split/'
     # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized'
     # directory = '/home/MarkF/DivideConquer/Results/MathExperiment/4_Split/'
     # small_data, bigdata, lookup_columns = load_data(directory,
-    #                                                 '/home/MarkF/DivideConquer/Results/MathExperiment/0_Credibility/'
+    #                                                 '/home/MarkF/DivideConquer/Results/MathExperiment/2_Split/One_Normalized/ICARUN_ALL/'
     #                                                 'ica_independent_components_consensus.tsv')
-    small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
+    datasets = LoadICARuns('/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+                           'Clustered_Splits/2_Split',
+                            '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+                            'ICARUN_ALL/ica_independent_components_consensus.tsv')
+    #small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/GPL570')
     # small_data, bigdata, lookup_columns = load_cancer_type('/home/MarkF/DivideConquer/Results/MathBlood')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Cancer_type'
+    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Clustered/2_Split'
     # save_directory = '/home/MarkF/DivideConquer/ICA/Results/0_Cred'
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
         fake_cluster = []
-        for data in small_data:
-            fake_cluster.append(random.choice(list(data.columns)))
-        fake_cluster.append(random.choice(list(bigdata.columns)))
+        for split in datasets.get_individual_small():
+            fake_cluster.append(random.choice(list(datasets.get_individual_small()[split].columns)))
+        fake_cluster.append(random.choice(list(datasets.get_sample_data().columns)))
         fake_clusters.append(fake_cluster)
-    # Merge the small components
-    big_small_data = small_data[0]
-    for i in range(1, len(small_data)):
-        big_small_data = pd.merge(left=big_small_data, right=small_data[i], left_index=True, right_index=True)
-    # Only compare these groups for now
-    compare_groups = [(big_small_data, bigdata)]
+
     # Pearson cutoff for consensus
     cut_off = 0.6
-    for dataframe_group in compare_groups:
-        # Merge everything together
-        df_full = pd.merge(left=dataframe_group[0], right=dataframe_group[1], left_index=True, right_index=True)
-        # Get correlation and make only 0,1 based on cutoff
-        full_correlation, full_correlation_cut_off = correlation_with_cutoff(df_full, cut_off)
-        # Check how the correlation is distributed
-        # half_correlation = calculate_correlation(dataframe_group[0], dataframe_group[1], full_correlation)
-        # check_distribution(half_correlation)
-        color_mapper = biology_small(full_correlation, lookup_columns)
-        # Turn it to later colors for the html plot
-        for z in color_mapper:
-            if z != 'big':
-                rgb = tuple([int(x * 255) for x in color_mapper[z]])
-                color_mapper[z] = '#%02x%02x%02x' % rgb[:3]
-            else:
-                color_mapper[z] = '#000000'
-        citrus_plot(full_correlation, color_mapper)
-        big_vs_small(full_correlation, lookup_columns)
-        # Cluster and plot
-        test_df = full_correlation_cut_off.sum()
-        test_df = test_df[test_df > 1]
-        # Z = linkage(full_correlation_cut_off.values, method='ward', optimal_ordering=True)
-        Z = linkage(full_correlation_cut_off[test_df.index].values, method='ward', optimal_ordering=True)
-        cols = [full_correlation_cut_off.columns[x] for x in leaves_list(Z)]
-        for column in full_correlation_cut_off:
-            if column not in cols:
-                cols.append(column)
-        # clustered_df = full_correlation_cut_off.iloc[leaves_list(Z), leaves_list(Z)]
-        clustered_df = full_correlation_cut_off.loc[cols, cols]
-        # plot_global_heatmap(clustered_df, 'Global_Heatmap')
-        plot_global_heatmap(clustered_df.iloc
-                            [:100, :100]
-                            , 'Left_Corner_Heatmap')
-        # Citrus plot of how the variables are correlated
-        citrus_plot(full_correlation, color_mapper)
-        # Make the clusters based on the correlation
-        clusters = make_clusters(full_correlation_cut_off)
-        # See how the credibility is distributed
-        # credibility = get_credibility(full_correlation, directory=directory)
-        # credibility = get_credibility(full_correlation, cancer_types=True)
-        # consensus_small(df_full, lookup_columns, credibility, full_correlation)
-        # See if the correlation gets better when merging clusters
-        merge_clusters(df_full, clusters, 'clustered')
-        # merge_clusters(df_full, fake_clusters, 'random')
+    # Merge everything together
+    # Get correlation and make only 0,1 based on cutoff
+    correlation = Correlation(datasets.get_merged_small(), datasets.get_sample_data())
+    MergeTwo(correlation.get_correlation())
+   # color_mapper = biology_small(correlation.get_correlation())
+
+    # Turn it to later colors for the html plot
+    for z in color_mapper:
+        if z != 'big':
+            rgb = tuple([int(x * 255) for x in color_mapper[z]])
+            color_mapper[z] = '#%02x%02x%02x' % rgb[:3]
+        else:
+            color_mapper[z] = '#000000'
+    citrus_plot(correlation.get_correlation(), color_mapper)
+    big_vs_small(correlation.get_correlation())
+    # Cluster and plot
+    test_df = correlation.get_one_zero_correlation(cut_off).sum()
+    test_df = test_df[test_df > 1]
+    # Z = linkage(full_correlation_cut_off.values, method='ward', optimal_ordering=True)
+    Z = linkage(correlation.get_one_zero_correlation(cut_off)[test_df.index].values, method='ward', optimal_ordering=True)
+    cols = [correlation.get_one_zero_correlation(cut_off).columns[x] for x in leaves_list(Z)]
+    for column in correlation.get_one_zero_correlation(cut_off):
+        if column not in cols:
+            cols.append(column)
+    clustered_df = correlation.get_one_zero_correlation(cut_off).loc[cols, cols]
+    plot_global_heatmap(clustered_df.iloc
+                        [:100, :100]
+                        , 'Left_Corner_Heatmap')
+    # Make the clusters based on the correlation
+    clusters = make_clusters(correlation.get_one_zero_correlation(cut_off))
+    # See how the credibility is distributed
+    # See if the correlation gets better when merging clusters
+    merge_clusters(correlation.get_merged_normall(), clusters, 'clustered')
+    merge_clusters(correlation.get_merged_normall(), fake_clusters, 'random')
