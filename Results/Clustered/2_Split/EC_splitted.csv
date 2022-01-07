@@ -1,43 +1,93 @@
-,0,1,2
-0,consensus independent component 69_1,consensus independent component 102_2,consensus independent component 127_big
-1,consensus independent component 81_1,consensus independent component 37_2,consensus independent component 108_big
-2,consensus independent component 36_1,consensus independent component 27_2,consensus independent component 7_big
-3,consensus independent component 142_1,consensus independent component 121_2,consensus independent component 112_big
-4,consensus independent component 35_1,consensus independent component 42_2,consensus independent component 16_big
-5,consensus independent component 138_1,consensus independent component 156_2,consensus independent component 38_big
-6,consensus independent component 141_1,consensus independent component 65_2,consensus independent component 12_big
-7,consensus independent component 45_1,consensus independent component 105_2,consensus independent component 98_big
-8,consensus independent component 121_1,consensus independent component 85_2,consensus independent component 95_big
-9,consensus independent component 22_1,consensus independent component 17_2,consensus independent component 5_big
-10,consensus independent component 47_1,consensus independent component 122_2,consensus independent component 100_big
-11,consensus independent component 77_1,consensus independent component 26_2,consensus independent component 75_big
-12,consensus independent component 38_1,consensus independent component 70_2,consensus independent component 92_big
-13,consensus independent component 20_1,consensus independent component 175_2,consensus independent component 68_big
-14,consensus independent component 32_1,consensus independent component 60_2,consensus independent component 56_big
-15,consensus independent component 82_1,consensus independent component 134_2,consensus independent component 105_big
-16,consensus independent component 25_1,consensus independent component 133_2,consensus independent component 87_big
-17,consensus independent component 9_1,consensus independent component 21_2,consensus independent component 20_big
-18,consensus independent component 28_1,consensus independent component 2_2,consensus independent component 48_big
-19,consensus independent component 44_1,consensus independent component 82_2,consensus independent component 25_big
-20,consensus independent component 8_1,consensus independent component 48_2,consensus independent component 2_big
-21,consensus independent component 55_1,consensus independent component 24_2,consensus independent component 8_big
-22,consensus independent component 85_1,consensus independent component 87_2,consensus independent component 61_big
-23,consensus independent component 83_1,consensus independent component 120_2,consensus independent component 51_big
-24,consensus independent component 102_1,consensus independent component 101_2,consensus independent component 43_big
-25,consensus independent component 42_1,consensus independent component 76_2,consensus independent component 60_big
-26,consensus independent component 84_1,consensus independent component 10_2,consensus independent component 89_big
-27,consensus independent component 56_1,consensus independent component 92_2,consensus independent component 136_big
-28,consensus independent component 49_1,consensus independent component 154_2,consensus independent component 137_big
-29,consensus independent component 7_1,consensus independent component 25_2,consensus independent component 55_big
-30,consensus independent component 24_1,consensus independent component 22_2,consensus independent component 4_big
-31,consensus independent component 40_1,consensus independent component 69_2,consensus independent component 15_big
-32,consensus independent component 31_1,consensus independent component 16_2,consensus independent component 31_big
-33,consensus independent component 16_1,consensus independent component 19_2,consensus independent component 1_big
-34,consensus independent component 50_1,consensus independent component 150_2,consensus independent component 159_big
-35,consensus independent component 1_1,consensus independent component 162_2,consensus independent component 143_big
-36,consensus independent component 98_1,consensus independent component 57_2,consensus independent component 72_big
-37,consensus independent component 64_1,consensus independent component 28_2,consensus independent component 50_big
-38,consensus independent component 60_1,consensus independent component 46_2,consensus independent component 79_big
-39,consensus independent component 10_1,consensus independent component 86_2,consensus independent component 54_big
-40,consensus independent component 18_1,consensus independent component 142_2,consensus independent component 135_big
-41,consensus independent component 3_1,consensus independent component 49_2,consensus independent component 111_big
+,0,1,2,3
+0,consensus independent component 61_1,consensus independent component 37_2,consensus independent component 80_big,
+1,consensus independent component 170_1,consensus independent component 127_2,consensus independent component 90_big,
+2,consensus independent component 91_3,consensus independent component 22_1,consensus independent component 16_big,
+3,consensus independent component 274_3,consensus independent component 141_2,consensus independent component 119_big,
+4,consensus independent component 16_3,consensus independent component 100_1,consensus independent component 148_2,consensus independent component 59_big
+5,consensus independent component 123_3,consensus independent component 69_1,consensus independent component 40_big,
+6,consensus independent component 63_3,consensus independent component 163_1,consensus independent component 56_2,consensus independent component 11_big
+7,consensus independent component 96_3,consensus independent component 97_1,consensus independent component 129_2,consensus independent component 115_big
+8,consensus independent component 129_3,consensus independent component 169_1,consensus independent component 118_2,consensus independent component 45_big
+9,consensus independent component 97_3,consensus independent component 70_1,consensus independent component 14_2,consensus independent component 12_big
+10,consensus independent component 71_3,consensus independent component 94_1,consensus independent component 101_2,consensus independent component 98_big
+11,consensus independent component 298_3,consensus independent component 176_1,consensus independent component 101_big,
+12,consensus independent component 241_3,consensus independent component 192_1,consensus independent component 112_2,consensus independent component 128_big
+13,consensus independent component 144_3,consensus independent component 153_2,consensus independent component 65_big,
+14,consensus independent component 121_3,consensus independent component 12_1,consensus independent component 58_2,consensus independent component 35_big
+15,consensus independent component 221_3,consensus independent component 227_1,consensus independent component 6_big,
+16,consensus independent component 183_1,consensus independent component 99_2,consensus independent component 125_big,
+17,consensus independent component 188_3,consensus independent component 250_2,consensus independent component 17_big,
+18,consensus independent component 129_1,consensus independent component 131_2,consensus independent component 49_big,
+19,consensus independent component 21_3,consensus independent component 58_1,consensus independent component 38_2,consensus independent component 95_big
+20,consensus independent component 92_3,consensus independent component 53_1,consensus independent component 36_2,consensus independent component 75_big
+21,consensus independent component 150_1,consensus independent component 224_2,consensus independent component 158_3,consensus independent component 138_big
+22,consensus independent component 278_3,consensus independent component 109_1,consensus independent component 143_2,consensus independent component 108_big
+23,consensus independent component 6_3,consensus independent component 120_2,consensus independent component 69_big,
+24,consensus independent component 36_3,consensus independent component 76_1,consensus independent component 27_2,consensus independent component 25_big
+25,consensus independent component 245_3,consensus independent component 214_1,consensus independent component 205_2,consensus independent component 118_big
+26,consensus independent component 181_3,consensus independent component 177_1,consensus independent component 166_2,consensus independent component 133_big
+27,consensus independent component 201_3,consensus independent component 168_1,consensus independent component 142_2,consensus independent component 27_big
+28,consensus independent component 127_3,consensus independent component 72_1,consensus independent component 87_2,consensus independent component 76_big
+29,consensus independent component 131_1,consensus independent component 96_2,consensus independent component 105_big,
+30,consensus independent component 210_3,consensus independent component 184_1,consensus independent component 160_big,
+31,consensus independent component 45_1,consensus independent component 122_2,consensus independent component 126_3,consensus independent component 2_big
+32,consensus independent component 2_3,consensus independent component 28_1,consensus independent component 53_2,consensus independent component 34_big
+33,consensus independent component 100_3,consensus independent component 133_1,consensus independent component 86_2,consensus independent component 74_big
+34,consensus independent component 141_3,consensus independent component 92_1,consensus independent component 158_2,consensus independent component 56_big
+35,consensus independent component 205_1,consensus independent component 64_2,consensus independent component 43_big,
+36,consensus independent component 269_3,consensus independent component 87_1,consensus independent component 194_2,consensus independent component 78_big
+37,consensus independent component 109_3,consensus independent component 113_1,consensus independent component 52_2,consensus independent component 58_big
+38,consensus independent component 102_3,consensus independent component 27_1,consensus independent component 152_2,consensus independent component 18_big
+39,consensus independent component 48_3,consensus independent component 36_1,consensus independent component 19_2,consensus independent component 5_big
+40,consensus independent component 45_1,consensus independent component 122_2,consensus independent component 300_3,consensus independent component 2_big
+41,consensus independent component 271_3,consensus independent component 139_1,consensus independent component 126_2,consensus independent component 156_big
+42,consensus independent component 64_3,consensus independent component 21_1,consensus independent component 55_2,consensus independent component 100_big
+43,consensus independent component 177_3,consensus independent component 26_1,consensus independent component 193_2,consensus independent component 60_big
+44,consensus independent component 32_3,consensus independent component 46_1,consensus independent component 45_2,consensus independent component 116_big
+45,consensus independent component 147_3,consensus independent component 175_1,consensus independent component 173_2,consensus independent component 55_big
+46,consensus independent component 159_1,consensus independent component 28_2,consensus independent component 68_big,
+47,consensus independent component 150_1,consensus independent component 246_2,consensus independent component 158_3,consensus independent component 138_big
+48,consensus independent component 18_3,consensus independent component 125_1,consensus independent component 130_2,consensus independent component 136_big
+49,consensus independent component 153_3,consensus independent component 102_1,consensus independent component 134_2,consensus independent component 88_big
+50,consensus independent component 125_3,consensus independent component 174_1,consensus independent component 198_2,consensus independent component 61_big
+51,consensus independent component 202_3,consensus independent component 40_1,consensus independent component 130_big,
+52,consensus independent component 133_3,consensus independent component 188_2,consensus independent component 57_big,
+53,consensus independent component 112_3,consensus independent component 41_1,consensus independent component 41_2,consensus independent component 32_big
+54,consensus independent component 30_3,consensus independent component 17_1,consensus independent component 79_2,consensus independent component 87_big
+55,consensus independent component 124_3,consensus independent component 127_1,consensus independent component 95_2,consensus independent component 51_big
+56,consensus independent component 49_3,consensus independent component 18_2,consensus independent component 135_big,
+57,consensus independent component 163_3,consensus independent component 251_1,consensus independent component 144_2,consensus independent component 30_big
+58,consensus independent component 166_3,consensus independent component 82_1,consensus independent component 203_2,consensus independent component 54_big
+59,consensus independent component 31_3,consensus independent component 49_1,consensus independent component 5_2,consensus independent component 71_big
+60,consensus independent component 74_3,consensus independent component 20_1,consensus independent component 44_2,consensus independent component 143_big
+61,consensus independent component 266_3,consensus independent component 65_1,consensus independent component 154_2,consensus independent component 137_big
+62,consensus independent component 3_3,consensus independent component 55_1,consensus independent component 24_2,consensus independent component 29_big
+63,consensus independent component 232_3,consensus independent component 257_2,consensus independent component 167_big,
+64,consensus independent component 41_3,consensus independent component 284_2,consensus independent component 67_big,
+65,consensus independent component 104_3,consensus independent component 79_1,consensus independent component 124_2,consensus independent component 113_big
+66,consensus independent component 119_3,consensus independent component 192_2,consensus independent component 145_big,
+67,consensus independent component 81_3,consensus independent component 68_1,consensus independent component 83_2,consensus independent component 4_big
+68,consensus independent component 106_3,consensus independent component 23_1,consensus independent component 68_2,consensus independent component 23_big
+69,consensus independent component 4_3,consensus independent component 74_1,consensus independent component 49_2,consensus independent component 47_big
+70,consensus independent component 95_3,consensus independent component 23_2,consensus independent component 121_big,
+71,consensus independent component 59_3,consensus independent component 59_1,consensus independent component 15_2,consensus independent component 72_big
+72,consensus independent component 75_3,consensus independent component 88_1,consensus independent component 164_2,consensus independent component 89_big
+73,consensus independent component 173_1,consensus independent component 243_2,consensus independent component 83_big,
+74,consensus independent component 85_3,consensus independent component 69_2,consensus independent component 92_big,
+75,consensus independent component 22_3,consensus independent component 15_1,consensus independent component 30_2,consensus independent component 1_big
+76,consensus independent component 68_3,consensus independent component 108_2,consensus independent component 24_big,
+77,consensus independent component 110_3,consensus independent component 103_1,consensus independent component 71_2,consensus independent component 159_big
+78,consensus independent component 38_3,consensus independent component 35_1,consensus independent component 17_2,consensus independent component 15_big
+79,consensus independent component 162_3,consensus independent component 35_2,consensus independent component 154_big,
+80,consensus independent component 113_3,consensus independent component 119_1,consensus independent component 88_2,consensus independent component 79_big
+81,consensus independent component 165_3,consensus independent component 74_2,consensus independent component 147_big,
+82,consensus independent component 136_3,consensus independent component 77_1,consensus independent component 110_2,consensus independent component 14_big
+83,consensus independent component 79_3,consensus independent component 54_1,consensus independent component 57_2,consensus independent component 50_big
+84,consensus independent component 53_3,consensus independent component 80_1,consensus independent component 21_2,consensus independent component 131_big
+85,consensus independent component 54_3,consensus independent component 57_1,consensus independent component 80_2,consensus independent component 111_big
+86,consensus independent component 87_3,consensus independent component 101_1,consensus independent component 114_2,consensus independent component 48_big
+87,consensus independent component 84_3,consensus independent component 7_1,consensus independent component 31_2,consensus independent component 31_big
+88,consensus independent component 98_3,consensus independent component 42_1,consensus independent component 119_2,consensus independent component 20_big
+89,consensus independent component 157_3,consensus independent component 90_2,consensus independent component 8_big,
+90,consensus independent component 270_3,consensus independent component 176_2,consensus independent component 106_big,
+91,consensus independent component 113_3,consensus independent component 88_2,consensus independent component 155_big,
