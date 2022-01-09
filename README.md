@@ -36,12 +36,12 @@
 Independent component analysis (ICA) is used to disentangle gene expression data into biological pathways. Current implementations of ICA use principal component analysis to drop a percentage of variance of the data to make it computational feasible.  However, the percentage of dropped variance can contain important information about rare cancer types. We propose a solution called divide and conquer. In this research we show that by first using high dimensional data clustering (HDDC) to cluster a dataset, and then running ICA with no dropped variance on each of the clusters, new information is found that was otherwise dropped. HDDC was chosen because it shows a good silhouette score combined with easy-to-understand cluster decisions based on used genes.  Our approach found an estimated source describing a pathway related to a rare form of cancer called mantle cell lymphoma. This estimated source has not been found previously with ICA. Results demonstrate that divide and conquer is capable of finding new pathways that were otherwise missed.  We anticipate our paper to be the starting point in developing a sophisticated divide and conquer approach capable of splitting datasets and using this to find every possible biological pathway present among the samples. 
 
 
-This Github page is about the first part of the project, the clustering. High dimensional data clustering (HDDC), mini batch K-means, Hiearchical clustering and UMAP+HDBSCAN are gridsearch and tested on three different datasets. The datasets are the GPL570, CCLE, and TCGA datasets. 
+This Github page is about the second part of the project, the behaviour of ICA. 2000 random samples of the GPL570 dataset were taken and the behaviour is analysed. The biological interpretation of this algorithm is analysed by running it on the complete GPL570 dataset split by cancer type. 
 
 
 ### Built With
 
-* Python 3.8.5
+* Python 3.9.6
 * R 3.6.1
 
 
@@ -49,13 +49,9 @@ This Github page is about the first part of the project, the clustering. High di
 <!-- GETTING STARTED -->
 ## Getting Started
 
-The scripts can't be run without access to the Peregrine cluster of the RUG. On this server the datasets are stored and access needs to be provided on request. The datasets are available as public repositories and can be found the following way:
-
 For the GEO platform, healthy and cancer samples were selected. These samples were selected with a two-step approach. First, automatic keyword filtering was applied. In this approach, the simple omnibus format in text (SOFT) was scanned. SOFT files contain metadata for each sample, this includes experimental condition and patient information. In this search approach only samples were kept if certain keywords can be matched with the descriptive field in the SOFT file. These keywords were chosen very broadly like 'breast' or 'lung'. Because of this broad approach a manual check was needed to remove false positives. In this step, only samples were kept if raw data was available and the samples represented a healthy or cancer tissue of patients. Cell lines, cultured human biopsies, and animal-derived tissue were excluded in this step. 
 
-For the TCGA the data was obtained from 34 cancer datasets available at the Broad GDAC Fire hose portal https://gdac.broadinstitute.org/. Here gene normalized RNA-sequence data was downloaded. Fragments per kilo-base of transcript per million mapped reads upper quartile normalization https://docs.gdc.cancer.gov/Data/PDF/Data_UG.pdf was used to normalize RNA-Seq expression level read counts.
-
-The CCLE dataset contains raw mRNA data of human cell lines. The following research conducted a detailed genetic characterization of these cell lines (The Cancer Cell Line Encyclopedia enables predictive modelling of anticancer drug sensitivity, Barretina) 
+From this dataset 2000 random samples were selected
 
 ### Prerequisites
 Jupiter notebook, Python and R should be installed and working before the main script can be used. 
@@ -64,27 +60,27 @@ Jupiter notebook, Python and R should be installed and working before the main s
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/MarkF-hanze/UMCG_Thesis
+   git clone https://github.com/MarkF-hanze/ICA
    ```
 2. Install the required packages
    ```sh
    pip3 install -r requirements.txt
    ```
-3. Get acces to the requered files
-
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-- Bash_Runs/      Contains scripts to run in the cluster.
-  * Jobs: contains the to be run files.
-  * Outputs: contains the output results of these runs
-- Scripts/Gridsearch Contains scripts to run the gridsearch
-  * Main: Search the best parameters for K-means and UMAP+HDBSCAn algorithm
-  * HDDC: give parameters (filepath) (clusternumber) search for the best HDDC parameters for this number of cluster for this dataset
-  * TestTimeR: Temporary file to test how long the HDDC algorithm will run on the comple GPL570 dataset to see if it is computationally feasible
-  * make_scores: Functions to calculate the silhouette score for a given dataset with labels
-- JupyterNotebook: This file contains notebooks that were used to further analyise some of the results
-- Results: Contains all the resulting images from all the analysis. Contains the best parameters and other results for every dataset and every algorithm. Also contains *dashboard.html* files. These files contain some manual evaluation results for how each clustering algorithm clusters the cancer type. Also the algorithms clustering behaviour is further analysed with the help of a sankey plot.
+- Main: Script to analyse the behaviour of a single split run (for example two splits of random splitting). Filepath to split should be put into this file to get it working on new data. File order in this file should be: Directories(names of split) with every directory containing the files ICARUN. ICARUN should contain ICA results as given by the analysertool. 
+- Main_Merged: Script to compare the different splitting optionts. Script to compare the behaviour beteween different splitting optionts. This script probably shouldn't be used anymore because a lot of manual inputs are given to specificly compare splitting methods and optionts available to this research. Newly added optionts or splits can be manually added but needs changes in a lot of places.
+- PCA_Check: Script to check the normalization behaviour of two random splits
+- /Resutls/ : Contains the results of all the different scripts. /Clusterd and /Random contain the Main results from the respective splitting tactics. /Random_vs_Clustered contains the results of the Main_Merged script comparing the two different splitting options. Cancer_Type contains the results of the complete GPL570 dataset split by cancer type for the biological interpertation
+- /Old: Scripts and results that weren't used in the report. Only left in case they would be usefull for further reserach
+- /Jupyter_Notebooks: Containing scripts that had some manual checks to see biological interpertations. Shouldn't be changed but can be looked at for some deeper insights not always present in the report
+- /HelperClasses: Folder contain different classes that are used in multiple files. 
+  * BiologicalInterpertation:  Classes doing different analysis explained in the paper. (Maximun correlation, interesting sources)
+  * CitrusPlot: Class creating the citrusplots
+  * Correlation: Class calculating the correalion between two different dataframes
+  * Heatmap: Making the heatmap and calculating different clusters based on this heatmap
+  * LoadData: Loading the different datastes with consensus estimated sources.
 
 
 
@@ -93,10 +89,6 @@ Jupiter notebook, Python and R should be installed and working before the main s
 
 Distributed under the mozilla license. See `LICENSE` for more information.
 
-<!-- IMAGES -->
-## Images
- ### End results comparison algorithms
-   <img src="Scripts/Results/IMAGES/Best_Scores.png" alt="End Result">
 
 
 
