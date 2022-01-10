@@ -17,7 +17,7 @@ class Heatmap(object):
         # Make heatmap with only 0 or 1
         self.one_zero_correlation = correlation.copy()
         self.transform_correlation()
-        # Make a dendogram to make the heatmap more interpertable
+        # Make a dendogram to make the heatmap more interpretable
         self.col_order = self.make_linkage()
 
     def transform_correlation(self):

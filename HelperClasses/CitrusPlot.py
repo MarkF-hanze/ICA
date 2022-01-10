@@ -177,7 +177,6 @@ class CitrusPlot(object):
 
     def _create_color_palette_nodes(self):
         i = len(self.node_color_palette)
-        unique_count = len(self.nodes.Group.unique())
         # Give every group without a color a color
         for group in self.nodes.Group.unique():
             if group not in self.node_color_palette:
@@ -189,6 +188,7 @@ class CitrusPlot(object):
                 else:
                     self.node_color_palette[group] = Category20[20][i]
                     i += 1
+
 
     def plot(self):
         # Make nodes a holoview object
@@ -204,5 +204,5 @@ class CitrusPlot(object):
 
         ))
         chord = chord.redim.range(color=(0, 1))
-        hv.save(chord, f'/home/MarkF/DivideConquer/ICA/citrusDELETE.png')
+        hv.save(chord, f'/home/MarkF/DivideConquer/ICA/citrusNormAll.png')
 

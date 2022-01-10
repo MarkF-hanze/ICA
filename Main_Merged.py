@@ -68,7 +68,6 @@ class CompareTactics(object):
         # Put it in a list for testing later
         credibility_values_big = [sum(x >= .8 for x in credibility_values_big),
                                   sum(x < .8 for x in credibility_values_big)]
-        # TODO change these names
         save_df = []
         save_df_1 = []
         # Load every the credibility index
@@ -101,11 +100,18 @@ class CompareTactics(object):
         # Dictionaries to dataframe and safe them
         save_df = pd.DataFrame(save_df, columns=['Group 1', 'Group 2', 'Fisher exact p_value'])
         save_df_1 = pd.DataFrame(save_df_1, columns=['Split', 'Consensus count'])
-        #save_df.to_csv('Results/Credibility_distribution_correaltions.csv', index=False)
+        # Plot the consensus counts
+        plot_df = save_df_1.copy()
+        plot_df[['Number \n of splits', 'Split type']] = plot_df['Split'].str.split('_', expand=True)
+        sns.lineplot(data=plot_df, x='Number \n of splits', y='Consensus count', hue='Split type', marker='o',
+                     palette=self.colors)
+        plt.tight_layout()
+        plt.savefig('Results/Random_VS_Clustered/Estimated_sources_count.png', dpi=1200)
+        #save_df.to_csv('Results//Random_VS_Clustered/Credibility_distribution_correaltions.csv', index=False)
         print('--------------------------------------------')
         print(save_df)
         print(save_df_1)
-        #save_df_1.to_csv('Results/Estimatehhpd_sources_count.csv', index=False)
+        #save_df_1.to_csv('Results/Random_VS_Clustered/Estimated_sources_count.csv', index=False)
         # Make a dataframe for plotting
         plot_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in plot_df.items()]))
         plot_df = pd.melt(plot_df, value_name='Credibility Index')
