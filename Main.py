@@ -1,20 +1,37 @@
+import sys
+
 from HelperClasses.Correlation import Correlation
-from HelperClasses.LoadData import LoadICARuns
+from HelperClasses.LoadData import LoadICARuns, LoadCancer
 from HelperClasses.BiologicalInterpertation import MergeTwo, Histogram, BigSmall
 from HelperClasses.CitrusPlot import CitrusPlot
 from HelperClasses.Heatmap import Heatmap
 import holoviews as hv
 import random
+
 hv.extension('bokeh')
 
 
+class Saver(object):
+    def __init__(self, path):
+        self.path = path
+
+    def get_path(self):
+        return self.path
+
+
 if __name__ == "__main__":
+    method = 'Random'
+    splits = '2_Split'
     # Load the small and big data
-    datasets = LoadICARuns('/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
-                           'Clustered_Splits/3_Split',
-                            '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
-                            'ICARUN_ALL/ica_independent_components_consensus.tsv')
-    save_directory = '/home/MarkF/DivideConquer/ICA/Results/Clustered/2_Split'
+    # datasets = LoadICARuns(f'/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+    #                        f'{method}_Splits/{splits}',
+    #                        '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+    #                        'ICARUN_ALL/ica_independent_components_consensus.tsv')
+    # saver = Saver(f'/home/MarkF/DivideConquer/ICA/Results/{method}/{splits}')
+    datasets = LoadCancer('/home/MarkF/DivideConquer/Results/GPL570/',
+                          '/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
+                           'ica_independent_components_consensus.tsv')
+    saver = Saver(f'Results/Cancer_type')
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
@@ -30,32 +47,28 @@ if __name__ == "__main__":
     # Get correlation and make only 0,1 based on cutoff
     correlation = Correlation(datasets.get_merged_small(), datasets.get_sample_data())
     # Make the plotter and set the colors
-    plotter = Histogram({'big': (0,0,0)})
+    plotter = Histogram({'big': (0, 0, 0)}, saver)
     # Plot the highest scores with the maximum correlation analysis
     biologicalInt = MergeTwo(correlation.get_correlation())
     biologicalInt.plot(plotter, 0.5)
     biologicalInt = BigSmall(correlation.get_correlation())
     biologicalInt.plot(plotter)
     # Turn it to html colors for later
-    # TODO in function
     # Turn it to later colors for the html plot
     color_mapper_html = {}
     for z in plotter.get_colormap():
         rgb = tuple([int(x * 255) for x in plotter.get_colormap()[z]])
         color_mapper_html[z] = '#%02x%02x%02x' % rgb[:3]
-    # TODO size is not representative of each node because it is sized based on the line width
+
     citrusplotter = CitrusPlot(correlation.get_correlation(), node_color_palette=color_mapper_html,
                                line_width_small=.3, line_width_big=.9, fake_amount=1000,
                                height=700, width=700, node_radius=1, label_text_font_size='40px',
-                               colorbar_opts={'width': 500, 'title': 'Pearson correlation'})
+                               colorbar_opts={'width': 500, 'title': 'Pearson correlation'}, saver=saver)
     citrusplotter.plot()
-
     # Cluster and plot
-    heatmap = Heatmap(correlation.get_correlation(), cut_off)
+    heatmap = Heatmap(correlation.get_correlation(), cut_off, saver)
     heatmap.plot()
     # Make the clusters based on the correlation
     heatmap.make_clusters()
-    # Give it the normall estimated sources
+    # Give it the normal estimated sources
     heatmap.merge_clusters(correlation.get_merged_normall())
-
-

@@ -1,4 +1,5 @@
 import sys
+import time
 
 import pandas as pd
 import numpy as np
@@ -8,9 +9,10 @@ import itertools
 
 
 class Histogram(object):
-    def __init__(self, custom_colors):
+    def __init__(self, custom_colors, saver):
         self.custom_colors = custom_colors
         self.used_colors = 0
+        self.saver = saver
 
     @staticmethod
     def clean_correlation(correlation, col_names):
@@ -80,7 +82,7 @@ class Histogram(object):
         plt.ylabel("Pearsons correlation")
         return fig, axs
 
-    def plot(self, plot_columns, correlation):
+    def plot(self, plot_columns, correlation, name):
         fig, axs = self.init_figures(len(plot_columns))
         # Start looping the to be plotted columns
         for z, col_names in enumerate(plot_columns):
@@ -93,9 +95,10 @@ class Histogram(object):
             axs.ravel()[z].bar(subset_cor['name2'], (subset_cor['value'] / 10) * 1,
                                bottom=(subset_cor['value'] / 10) * 9, color=colors[1])
         fig, axs = self.update_layout(fig, axs)
-        plt.show()
-        # plt.savefig(f'{save_directory}/{name_file}.svg', dpi=1200,
-        #            bbox_extra_artists=(lgd,), bbox_inches='tight')
+        #plt.show()
+        plt.savefig(f'{self.saver.get_path()}/{name}.svg', )
+        #dpi=1200,
+        #bbox_extra_artists=(lgd,), bbox_inches='tight'
         plt.clf()
 
     def get_colormap(self):
@@ -169,7 +172,7 @@ class MergeTwo(object):
         # Only plot the histograms with score bigger than cutoff
         # Set it in a list of list for the histogram
         plot_columns = plot_df[plot_df['Score'] > plot_cutoff].drop('Score', axis=1).iloc[:].values
-        plotter.plot(plot_columns, self.original_cor)
+        plotter.plot(plot_columns, self.original_cor, 'Biological_int')
 
 
 class BigSmall(object):
@@ -272,4 +275,4 @@ class BigSmall(object):
         # Dictionaries to save the results
         input_figure = self.create_scores()
         #pd.DataFrame(input_figure).to_csv(f'{save_directory}/EC_splitted.csv')
-        plotter.plot(input_figure, self.correlation)
+        plotter.plot(input_figure, self.correlation,'EC_splitted')

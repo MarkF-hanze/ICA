@@ -11,7 +11,8 @@ from HelperClasses.LoadData import LoadICARuns
 
 
 class CompareTactics(object):
-    def __init__(self):
+    def __init__(self, save_path):
+        self.save_path = save_path
         self.directories = None
         # Only compatible with 2,3 and 4 checks
         self.line_styles = {
@@ -53,8 +54,8 @@ class CompareTactics(object):
         plt.ylabel('Consensus count')
         plt.legend()
         plt.tight_layout()
-        #plt.savefig(f'Results/Pearson_distribution_Cutoff.svg', dpi=1200)
-        plt.show()
+        plt.savefig(f'{self.save_path}/Pearson_distribution_Cutoff.svg', dpi=1200)
+        #plt.show()
 
     def get_credibility(self):
         # Get the big value from a random set
@@ -101,12 +102,12 @@ class CompareTactics(object):
         save_df = pd.DataFrame(save_df, columns=['Group 1', 'Group 2', 'Fisher exact p_value'])
         save_df_1 = pd.DataFrame(save_df_1, columns=['Split', 'Consensus count'])
         # Plot the consensus counts
-        plot_df = save_df_1.copy()
-        plot_df[['Number \n of splits', 'Split type']] = plot_df['Split'].str.split('_', expand=True)
-        sns.lineplot(data=plot_df, x='Number \n of splits', y='Consensus count', hue='Split type', marker='o',
+        estimated_count = save_df_1.copy()
+        estimated_count[['Number \n of splits', 'Split type']] = estimated_count['Split'].str.split('_', expand=True)
+        sns.lineplot(data=estimated_count, x='Number \n of splits', y='Consensus count', hue='Split type', marker='o',
                      palette=self.colors)
         plt.tight_layout()
-        plt.savefig('Results/Random_VS_Clustered/Estimated_sources_count.png', dpi=1200)
+        plt.savefig('Results/Random_VS_Clustered/Estimated_sources_count.svg', dpi=1200)
         #save_df.to_csv('Results//Random_VS_Clustered/Credibility_distribution_correaltions.csv', index=False)
         print('--------------------------------------------')
         print(save_df)
@@ -121,13 +122,15 @@ class CompareTactics(object):
         self.plot_violin_cred(plot_df)
 
     def plot_violin_cred(self, df):
+        plt.clf()
         sns.violinplot(data=df, y='Credibility Index', x='number', hue='tactic', palette=self.colors,
                        cut=0, split=True)
         plt.xlabel('Number of splits')
         plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
         plt.title('Distribution of the consensus estimated components')
         plt.tight_layout()
-        plt.show()
+        plt.savefig(f'{self.save_path}/Credibility_distribution_correlations.svg', dpi=1200)
+        #plt.show()
         plt.clf()
 
     def get_consensus(self, split):
@@ -191,7 +194,8 @@ class CompareTactics(object):
         # Start making the plot
         g = sns.FacetGrid(end_df, col="split", row='group', margin_titles=True)
         g.map(sns.scatterplot, 'credibility index', "Spearman correlation", alpha=.7)
-        plt.show()
+        plt.savefig(f'{self.save_path}/Correlation_vs_Credibility.svg', dpi=1200)
+        #plt.show()
         plt.clf()
         save_df = pd.DataFrame(save_df, columns=['Group', 'Spearman correlation', 'Spearman p value'])
         print(save_df)
@@ -230,9 +234,8 @@ class CompareTactics(object):
         plt.title(f"Density plot of highest correlation for every estimated source \n in the sample data")
         plt.xlabel("Number of splits")
         plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-        plt.show()
-
-       # plt.savefig(f'Results/Pearson_distribution_KDE.svg', dpi=1200, bbox_inches='tight')
+        #plt.show()
+        plt.savefig(f'{self.save_path}/Pearson_distribution_KDE.svg', dpi=1200, bbox_inches='tight')
         #
         sns.set(font_scale=1)
 
@@ -275,7 +278,7 @@ class CompareTactics(object):
 
 if __name__ == "__main__":
     pd.options.mode.chained_assignment = None
-    compare = CompareTactics()
+    compare = CompareTactics('Results/Random_VS_Clustered')
     directories = [('2_Clustered', '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/Clustered_Splits/2_Split'),
                    ('3_Clustered', '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/Clustered_Splits/3_Split'),
                    ('4_Clustered', '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/Clustered_Splits/4_Split'),

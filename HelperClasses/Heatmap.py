@@ -9,7 +9,8 @@ import itertools
 import matplotlib.pyplot as plt
 
 class Heatmap(object):
-    def __init__(self, correlation, cut_off):
+    def __init__(self, correlation, cut_off, saver):
+        self.saver = saver
         self.clusters = []
         # Make variables
         self.cut_off = cut_off
@@ -67,7 +68,7 @@ class Heatmap(object):
         p.toolbar.logo = None
         p.toolbar_location = None
         # Export it
-        export_png(p, filename=f'TESTDELETE.png')
+        export_png(p, filename=f'{self.saver.get_path()}/Heatmap.png')
 
     def make_clusters(self):
         """
@@ -90,6 +91,9 @@ class Heatmap(object):
                 # Append the components to the value and put it on zero
                 self.clusters.append(components)
                 temp_df[components] = 0
+
+    def set_cluster(self, cluster):
+        self.clusters = cluster
 
     def make_negative(self, vector):
         return -vector
@@ -167,7 +171,7 @@ class Heatmap(object):
         plt.plot([0, 1], [0, 1], 'r--')
         plt.xlabel('Original distance correlation')
         plt.ylabel('New distance correlation')
-        plt.show()
+        plt.savefig(f'{self.saver.get_path()}/Fading_clustered.svg')
         plt.clf()
 
 

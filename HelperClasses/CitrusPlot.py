@@ -10,9 +10,10 @@ hv.extension('bokeh')
 pd.set_option('display.max_columns', None)
 
 class CitrusPlot(object):
-    def __init__(self, correlation, line_width_small, line_width_big, node_color_palette=None, fake_amount=1000,
+    def __init__(self, correlation, line_width_small, line_width_big, saver, node_color_palette=None, fake_amount=1000,
                  **kwargs):
         # Make all the variables global
+        self.saver = saver
         self.fake_amount = fake_amount
         self.line_width_small = line_width_small
         self.line_width_big = line_width_big
@@ -204,5 +205,5 @@ class CitrusPlot(object):
 
         ))
         chord = chord.redim.range(color=(0, 1))
-        hv.save(chord, f'/home/MarkF/DivideConquer/ICA/citrusNormAll.png')
+        hv.save(chord, f'{self.saver.get_path()}/citrusPlot.png')
 

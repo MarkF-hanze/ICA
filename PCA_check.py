@@ -136,7 +136,7 @@ for split in splits:
     for name in splits[split][0]:
         plot_df.append([f'{split} {name}', 'PCA', splits[split][0][name]])
         plot_df.append([f'{split} {name}', 'ICA', splits[split][1][name].shape[1]])
-        plot_df.append([f'{split} {name}', 'consensus',
+        plot_df.append([f'{split} {name}', 'ICA credibility > 0.5',
                         splits[split][2][name][splits[split][2][name]['credibility index'] > 0.5].shape[0]])
 plot_df = pd.DataFrame.from_records(plot_df, columns=['Bar type', 'Component type', 'Count'])
 plot_df['Bar type'] = pd.Categorical(plot_df['Bar type'],
@@ -150,4 +150,4 @@ colors = ['#641e16', '#c0392b', '#e6b0aa',
           '#186a3b', '#2ecc71', '#82e0aa']
 colors = [tuple(c / 255 for c in ImageColor.getcolor(i, "RGB")) for i in colors]
 sns.barplot(data=plot_df, x='Component type', y='Count', hue='Bar type', palette=colors)
-plt.savefig('Results/Normalization_Experiment/Counts.png', dpi=1200)
+plt.savefig('Results/Normalization_Experiment/Counts.svg', dpi=1200)
