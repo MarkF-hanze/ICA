@@ -8,6 +8,7 @@ import sys
 from bokeh.palettes import Category20
 from matplotlib import pyplot as plt
 from PIL import ImageColor
+from Main import Saver
 
 from HelperClasses.CitrusPlot import CitrusPlot
 
@@ -99,6 +100,8 @@ correlation = np.absolute(correlation)
 correlation = pd.DataFrame(correlation, columns=df.columns, index=df.columns)
 correlation = correlation.loc[[x for x in correlation.columns if '.ALL' in x],
                               [x for x in correlation.columns if '.ALL' in x]]
+correlation = correlation.loc[[x for x in correlation.columns if 'Three' not in x],
+                              [x for x in correlation.columns if 'Three' not in x]]
 correlation.columns = [x.replace('.ALL', '') for x in correlation.columns]
 correlation.index = [x.replace('.ALL', '') for x in correlation.index]
 
@@ -116,15 +119,16 @@ colors = {
     'None.SPLIT1': '#2ecc71',
     'None.SPLIT2': '#82e0aa',
 }
-
-# citrusplotter = CitrusPlot(correlation, node_color_palette=colors,
-#                            node_line_color='black',
-#                            line_width_small=.3, line_width_big=.9, fake_amount=1000,
-#                            height=700, width=700, node_radius=1, label_text_font_size='10px',
-#                            colorbar_opts={'width': 500, 'title': 'Pearson correlation'})
+saver = Saver('Results/Normalization_Experiment')
+citrusplotter = CitrusPlot(correlation, node_color_palette=colors, saver=saver,
+                           node_line_color='black',
+                           line_width_small=.3, line_width_big=.9, fake_amount=1000,
+                           height=700, width=700, node_radius=1, label_text_font_size='10px',
+                           colorbar_opts={'width': 500, 'title': 'Pearson correlation'})
 # citrusplotter.plot()
 
-### Make the countplot\
+
+### Make the countplot
 splits = {
     'One normalization': one.get_counts(),
     'Three normalization': three.get_counts(),
@@ -139,15 +143,20 @@ for split in splits:
         plot_df.append([f'{split} {name}', 'ICA credibility > 0.5',
                         splits[split][2][name][splits[split][2][name]['credibility index'] > 0.5].shape[0]])
 plot_df = pd.DataFrame.from_records(plot_df, columns=['Bar type', 'Component type', 'Count'])
+# Remove Three ALl
+plot_df = plot_df[plot_df['Bar type'] != 'Three normalization ALL']
 plot_df['Bar type'] = pd.Categorical(plot_df['Bar type'],
-                                ['One normalization SPLIT1', 'Three normalization SPLIT1', 'No normalization SPLIT1',
-                                 'One normalization SPLIT2', 'Three normalization SPLIT2', 'No normalization SPLIT2',
-                                 'One normalization ALL', 'Three normalization ALL', 'No normalization ALL'])
+                                     ['One normalization SPLIT1', 'Three normalization SPLIT1',
+                                      'No normalization SPLIT1',
+                                      'One normalization SPLIT2', 'Three normalization SPLIT2',
+                                      'No normalization SPLIT2',
+                                      'One normalization ALL',  'No normalization ALL'])
 plot_df = plot_df.sort_values('Bar type')
 
+#  '#2ecc71'
 colors = ['#641e16', '#c0392b', '#e6b0aa',
           '#1b4f72', '#3498db', '#aed6f1',
-          '#186a3b', '#2ecc71', '#82e0aa']
+          '#186a3b', '#82e0aa']
 colors = [tuple(c / 255 for c in ImageColor.getcolor(i, "RGB")) for i in colors]
 sns.barplot(data=plot_df, x='Component type', y='Count', hue='Bar type', palette=colors)
 plt.savefig('Results/Normalization_Experiment/Counts.svg', dpi=1200)
