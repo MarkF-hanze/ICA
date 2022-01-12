@@ -20,18 +20,21 @@ class Saver(object):
 
 
 if __name__ == "__main__":
-    method = 'Random'
+    method = 'Clustered'
     splits = '2_Split'
+    cancer_type = False
     # Load the small and big data
-    # datasets = LoadICARuns(f'/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
-    #                        f'{method}_Splits/{splits}',
-    #                        '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
-    #                        'ICARUN_ALL/ica_independent_components_consensus.tsv')
-    # saver = Saver(f'/home/MarkF/DivideConquer/ICA/Results/{method}/{splits}')
-    datasets = LoadCancer('/home/MarkF/DivideConquer/Results/GPL570/',
-                          '/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
-                           'ica_independent_components_consensus.tsv')
-    saver = Saver(f'Results/Cancer_type')
+    if cancer_type:
+        datasets = LoadCancer('/home/MarkF/DivideConquer/Results/GPL570/',
+                              '/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
+                              'ica_independent_components_consensus.tsv')
+        saver = Saver(f'Results/Cancer_type')
+    else:
+        datasets = LoadICARuns(f'/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+                               f'{method}_Splits/{splits}',
+                               '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+                               'ICARUN_ALL/ica_independent_components_consensus.tsv')
+        saver = Saver(f'/home/MarkF/DivideConquer/ICA/Results/{method}/{splits}')
     # Create the fake clusters for the check later
     fake_clusters = []
     for x in range(50):
@@ -70,5 +73,6 @@ if __name__ == "__main__":
     heatmap.plot()
     # Make the clusters based on the correlation
     heatmap.make_clusters()
+    #heatmap.set_cluster(fake_clusters)
     # Give it the normal estimated sources
     heatmap.merge_clusters(correlation.get_merged_normall())
