@@ -145,12 +145,14 @@ for split in splits:
 plot_df = pd.DataFrame.from_records(plot_df, columns=['Bar type', 'Component type', 'Count'])
 # Remove Three ALl
 plot_df = plot_df[plot_df['Bar type'] != 'Three normalization ALL']
+plot_df['Bar type'] = plot_df['Bar type'].str.replace('SPLIT', 'subset ')
+plot_df['Bar type'] = plot_df['Bar type'].str.replace('ALL', 'sample')
 plot_df['Bar type'] = pd.Categorical(plot_df['Bar type'],
-                                     ['One normalization SPLIT1', 'Three normalization SPLIT1',
-                                      'No normalization SPLIT1',
-                                      'One normalization SPLIT2', 'Three normalization SPLIT2',
-                                      'No normalization SPLIT2',
-                                      'One normalization ALL',  'No normalization ALL'])
+                                     ['One normalization subset 1', 'Three normalization subset 1',
+                                      'No normalization subset 1',
+                                      'One normalization subset 2', 'Three normalization subset 2',
+                                      'No normalization subset 2',
+                                      'One normalization sample',  'No normalization sample'])
 plot_df = plot_df.sort_values('Bar type')
 
 #  '#2ecc71'
@@ -159,4 +161,4 @@ colors = ['#641e16', '#c0392b', '#e6b0aa',
           '#186a3b', '#82e0aa']
 colors = [tuple(c / 255 for c in ImageColor.getcolor(i, "RGB")) for i in colors]
 sns.barplot(data=plot_df, x='Component type', y='Count', hue='Bar type', palette=colors)
-plt.savefig('Results/Normalization_Experiment/Counts.svg', dpi=1200)
+plt.savefig('Results/Normalization_Experiment/Counts.png', dpi=300)
