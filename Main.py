@@ -1,5 +1,7 @@
 import sys
 
+from bokeh.palettes import Category10
+
 from HelperClasses.Correlation import Correlation
 from HelperClasses.LoadData import LoadICARuns, LoadCancer
 from HelperClasses.BiologicalInterpertation import MergeTwo, Histogram, BigSmall
@@ -20,8 +22,8 @@ class Saver(object):
 
 
 if __name__ == "__main__":
-    method = 'Clustered'
-    splits = '2_Split'
+    method = 'Random'
+    splits = '3_Split'
     cancer_type = False
     # Load the small and big data
     if cancer_type:
@@ -63,11 +65,25 @@ if __name__ == "__main__":
         rgb = tuple([int(x * 255) for x in plotter.get_colormap()[z]])
         color_mapper_html[z] = '#%02x%02x%02x' % rgb[:3]
 
-    citrusplotter = CitrusPlot(correlation.get_correlation(), node_color_palette=color_mapper_html,
-                               line_width_small=.3, line_width_big=.9, fake_amount=1000,
-                               height=700, width=700, node_radius=1, label_text_font_size='40px',
-                               colorbar_opts={'width': 500, 'title': 'Pearson correlation'}, saver=saver)
+    citrusplotter = CitrusPlot(correlation.get_correlation(),
+                               node_color_palette={'big': '#000000',
+                                                   '1': Category10[10][0],
+                                                   '2': Category10[10][2],
+                                                   '3': Category10[10][4],
+                                                   '4': Category10[10][1]},
+                               line_width_small=3, line_width_big=9, fake_amount=1000,
+                               height=7000, width=7000, node_radius=1, label_text_font_size='400px',
+                               colorbar_opts={'width': 5000, 'height': 150,
+                                              'title': "Pearson's correlation",
+                                              'label_standoff': 20,
+                                              }, fontscale=20, colorbar=False,
+                               saver=saver)
+    # itrusplotter = CitrusPlot(correlation.get_correlation(), node_color_palette=color_mapper_html,
+    #                           line_width_small=.3, line_width_big=.9, fake_amount=1000,
+    #                           height=700, width=700, node_radius=1, label_text_font_size='40px',
+    #                           colorbar_opts={'width': 500, 'title': 'Pearson correlation'}, saver=saver)
     citrusplotter.plot()
+    sys.exit()
     # Cluster and plot
     heatmap = Heatmap(correlation.get_correlation(), cut_off, saver)
     heatmap.plot()

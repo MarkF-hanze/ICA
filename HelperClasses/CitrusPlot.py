@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import holoviews as hv
 import sys
-from bokeh.palettes import Blues256, Category20
+from bokeh.palettes import Blues256, Category20, Category10
 from holoviews import opts
 from collections import defaultdict
 from bokeh.io import export_png, export_svgs
@@ -11,7 +11,8 @@ pd.set_option('display.max_columns', None)
 
 class CitrusPlot(object):
     def __init__(self, correlation, line_width_small, line_width_big, saver, node_color_palette=None, fake_amount=1000,
-                 **kwargs):
+                 fontscale=1, **kwargs):
+        self.fontscale = fontscale
         # Make all the variables global
         self.saver = saver
         self.fake_amount = fake_amount
@@ -187,7 +188,7 @@ class CitrusPlot(object):
                 # TODO deze set nog globaal invulbaar maken
                 # ELse from catergory 20 like the other group
                 else:
-                    self.node_color_palette[group] = Category20[20][i]
+                    self.node_color_palette[group] = Category20[10][i]
                     i += 1
 
 
@@ -200,10 +201,11 @@ class CitrusPlot(object):
         chord.opts(
             opts.Chord(edge_color='color', edge_cmap=self.color_pallet_lines, edge_alpha='alpha',
                        labels='text', node_color='node_color', label_text_color='node_color',
-                       colorbar=True, edge_line_width='width', node_marker='none',
+                       edge_line_width='width', node_marker='none',
                        colorbar_position='top', **self.kwargs
 
         ))
+        chord.opts(fontscale=self.fontscale)
         chord = chord.redim.range(color=(0, 1))
         hv.save(chord, f'{self.saver.get_path()}/citrusPlot.png')
 

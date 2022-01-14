@@ -161,4 +161,4 @@ colors = ['#641e16', '#c0392b', '#e6b0aa',
           '#186a3b', '#82e0aa']
 colors = [tuple(c / 255 for c in ImageColor.getcolor(i, "RGB")) for i in colors]
 sns.barplot(data=plot_df, x='Component type', y='Count', hue='Bar type', palette=colors)
-plt.savefig('Results/Normalization_Experiment/Counts.png', dpi=300)
+plt.savefig('Results/Normalization_Experiment/Counts.svg', dpi=300)

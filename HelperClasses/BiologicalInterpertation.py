@@ -96,7 +96,7 @@ class Histogram(object):
                                bottom=(subset_cor['value'] / 10) * 9, color=colors[1])
         fig, axs = self.update_layout(fig, axs)
         #plt.show()
-        plt.savefig(f'{self.saver.get_path()}/{name}.svg', )
+        plt.savefig(f'{self.saver.get_path()}/{name}.svg', dpi=300)
         #dpi=1200,
         #bbox_extra_artists=(lgd,), bbox_inches='tight'
         plt.clf()

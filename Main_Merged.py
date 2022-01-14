@@ -54,7 +54,7 @@ class CompareTactics(object):
         plt.ylabel('Consensus count')
         plt.legend()
         plt.tight_layout()
-        plt.savefig(f'{self.save_path}/Pearson_distribution_Cutoff.svg', dpi=1200)
+        plt.savefig(f'{self.save_path}/Pearson_distribution_Cutoff.svg', dpi=300)
         #plt.show()
 
     def get_credibility(self):
@@ -107,7 +107,7 @@ class CompareTactics(object):
         sns.lineplot(data=estimated_count, x='Number \n of splits', y='Consensus count', hue='Split type', marker='o',
                      palette=self.colors)
         plt.tight_layout()
-        plt.savefig('Results/Random_VS_Clustered/Estimated_sources_count.svg', dpi=1200)
+        plt.savefig('Results/Random_VS_Clustered/Estimated_sources_count.svg', dpi=300)
         #save_df.to_csv('Results//Random_VS_Clustered/Credibility_distribution_correaltions.csv', index=False)
         print('--------------------------------------------')
         print(save_df)
@@ -129,7 +129,7 @@ class CompareTactics(object):
         plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
         plt.title('Distribution of the consensus estimated components')
         plt.tight_layout()
-        plt.savefig(f'{self.save_path}/Credibility_distribution_correlations.svg', dpi=1200)
+        plt.savefig(f'{self.save_path}/Credibility_distribution_correlations.svg', dpi=300)
         #plt.show()
         plt.clf()
 
@@ -194,7 +194,7 @@ class CompareTactics(object):
         # Start making the plot
         g = sns.FacetGrid(end_df, col="split", row='group', margin_titles=True)
         g.map(sns.scatterplot, 'credibility index', "Spearman correlation", alpha=.7)
-        plt.savefig(f'{self.save_path}/Correlation_vs_Credibility.svg', dpi=1200)
+        plt.savefig(f'{self.save_path}/Correlation_vs_Credibility.svg', dpi=300)
         #plt.show()
         plt.clf()
         save_df = pd.DataFrame(save_df, columns=['Group', 'Spearman correlation', 'Spearman p value'])
@@ -235,7 +235,7 @@ class CompareTactics(object):
         plt.xlabel("Number of splits")
         plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
         #plt.show()
-        plt.savefig(f'{self.save_path}/Pearson_distribution_KDE.svg', dpi=1200, bbox_inches='tight')
+        plt.savefig(f'{self.save_path}/Pearson_distribution_KDE.svg', dpi=300, bbox_inches='tight')
         #
         sns.set(font_scale=1)
 
