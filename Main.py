@@ -22,8 +22,9 @@ class Saver(object):
 
 
 if __name__ == "__main__":
-    method = 'Random'
-    splits = '2_Split'
+
+    method = 'Clustered'
+    splits = '4_Split'
     cancer_type = False
     # Load the small and big data
     if cancer_type:
@@ -72,11 +73,11 @@ if __name__ == "__main__":
                                                    '3': Category10[10][4],
                                                    '4': Category10[10][1]},
                                line_width_small=3, line_width_big=9, fake_amount=1000,
-                               height=7000, width=7000, node_radius=1, label_text_font_size='400px',
+                               height=7000, width=7000, node_radius=1, label_text_font_size='200px',
                                colorbar_opts={'width': 5000, 'height': 150,
                                               'title': "Pearson's correlation",
                                               'label_standoff': 20,
-                                              }, fontscale=20, colorbar=True,
+                                              }, fontscale=20, colorbar=False,
                                saver=saver)
     # itrusplotter = CitrusPlot(correlation.get_correlation(), node_color_palette=color_mapper_html,
     #                           line_width_small=.3, line_width_big=.9, fake_amount=1000,

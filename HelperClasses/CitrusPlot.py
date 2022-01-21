@@ -94,6 +94,10 @@ class CitrusPlot(object):
         new_nodes = pd.DataFrame()
         for group, df in self.nodes.groupby('Group'):
             group_text = list(np.repeat('', df.shape[0]))
+            if group == 'big':
+                group = 'Sample'
+            else:
+                group = f'Subset {group}'
             group_text[df.shape[0] // 2] = group
             df['text'] = group_text
             new_nodes = new_nodes.append(df)
