@@ -25,18 +25,25 @@ if __name__ == "__main__":
 
     method = 'Clustered'
     splits = '4_Split'
-    cancer_type = False
+    cancer_type = True
     # Load the small and big data
     if cancer_type:
         datasets = LoadCancer('/home/MarkF/DivideConquer/Results/GPL570/',
                               '/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
                               'ica_independent_components_consensus.tsv')
         saver = Saver(f'Results/Cancer_type')
+        node_pallete = {'big': '#000000'}
     else:
-        datasets = LoadICARuns(f'/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
-                               f'{method}_Splits/{splits}',
-                               '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
-                               'ICARUN_ALL/ica_independent_components_consensus.tsv')
+        node_pallete = {'big': '#000000',
+                        '1': Category10[10][0],
+                        '2': Category10[10][2],
+                        '3': Category10[10][4],
+                        '4': Category10[10][1]}
+        datasets = LoadICARuns(
+            f'/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+            f'{method}_Splits/{splits}',
+            '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/'
+            'ICARUN_ALL/ica_independent_components_consensus.tsv')
         saver = Saver(f'/home/MarkF/DivideConquer/ICA/Results/{method}/{splits}')
     # Create the fake clusters for the check later
     fake_clusters = []
@@ -67,11 +74,7 @@ if __name__ == "__main__":
         color_mapper_html[z] = '#%02x%02x%02x' % rgb[:3]
 
     citrusplotter = CitrusPlot(correlation.get_correlation(),
-                               node_color_palette={'big': '#000000',
-                                                   '1': Category10[10][0],
-                                                   '2': Category10[10][2],
-                                                   '3': Category10[10][4],
-                                                   '4': Category10[10][1]},
+                               node_color_palette=node_pallete,
                                line_width_small=3, line_width_big=9, fake_amount=1000,
                                height=7000, width=7000, node_radius=1, label_text_font_size='200px',
                                colorbar_opts={'width': 5000, 'height': 150,
@@ -90,6 +93,6 @@ if __name__ == "__main__":
     heatmap.plot()
     # Make the clusters based on the correlation
     heatmap.make_clusters()
-    #heatmap.set_cluster(fake_clusters)
+    # heatmap.set_cluster(fake_clusters)
     # Give it the normal estimated sources
     heatmap.merge_clusters(correlation.get_merged_normall())
