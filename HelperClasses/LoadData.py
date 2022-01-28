@@ -206,3 +206,24 @@ class LoadCancer(LoadICARuns):
                     # Give the column a unique name and add the relative values to the correct list
                     df.columns = [f'{x}_{name}' for x in df.columns]
                     self.small_dataframes[name] = df
+
+    def load_credibility(self):
+        self.credibility_small = []
+        self.credibility_sets = []
+        for cancer_type in os.scandir(self.directory):
+            if 'All_Cancer' not in cancer_type.path and os.path.isdir(cancer_type.path):
+                for file in os.scandir(f'{cancer_type.path}/ICARUN'):
+                    if 'ica_robustness_metrics_independent_components_consensus.tsv' in file.path:
+                        i = cancer_type.path.split('/')[-1].replace('_', ' ')
+                        df = pd.read_csv(file.path, sep='\t', index_col=0)
+                        df.index = [f'{x}_{i}' for x in df.index]
+                        self.credibility_small.append(df)
+                        self.credibility_sets.append(i)
+        # Change index
+        all_data = pd.read_csv(
+            '/home/MarkF/DivideConquer/Results/GPL570/All_Cancer/ICARUN/'
+            'ica_robustness_metrics_independent_components_consensus.tsv', sep='\t', index_col=0)
+        all_data.index = [f'{z}_big' for z in all_data.index]
+        self.credibility_sets.append(f'big')
+        self.credibility_small.append(all_data)
+        self.credibility_big = pd.concat(self.credibility_small)

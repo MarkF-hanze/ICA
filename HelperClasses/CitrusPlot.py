@@ -192,7 +192,7 @@ class CitrusPlot(object):
                 # TODO deze set nog globaal invulbaar maken
                 # ELse from catergory 20 like the other group
                 else:
-                    self.node_color_palette[group] = Category20[10][i]
+                    self.node_color_palette[group] = Category20[20][i]
                     i += 1
 
 
