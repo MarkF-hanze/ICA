@@ -126,7 +126,7 @@ citrusplotter = CitrusPlot(correlation, node_color_palette=colors, saver=saver,
                            height=700, width=700, node_radius=1, label_text_font_size='10px',
                            colorbar_opts={'width': 500, 'title': 'Pearson correlation'})
 citrusplotter.plot()
-sys.exit()
+
 
 ### Make the countplot
 splits = {
