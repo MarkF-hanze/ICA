@@ -104,11 +104,11 @@ correlation = correlation.loc[[x for x in correlation.columns if 'Three' not in 
                               [x for x in correlation.columns if 'Three' not in x]]
 correlation.columns = [x.replace('.ALL', '') for x in correlation.columns]
 correlation.index = [x.replace('.ALL', '') for x in correlation.index]
-
+print(correlation)
 colors = {
-    'One normalization': Category20[20][0],
-    'Three normalizations': Category20[20][1],
-    'No normalization': Category20[20][2],
+    'One normalization': Category20[20][2],
+    'Three normalizations': Category20[20][4],
+    'No normalization': Category20[20][6],
     'One.ALL': '#641e16',
     'One.SPLIT1': '#c0392b',
     'One.SPLIT2': '#e6b0aa',
@@ -121,12 +121,12 @@ colors = {
 }
 saver = Saver('Results/Normalization_Experiment')
 citrusplotter = CitrusPlot(correlation, node_color_palette=colors, saver=saver,
-                           node_line_color='black',
+                           node_line_color='black', show_legend=True,
                            line_width_small=.3, line_width_big=.9, fake_amount=1000,
                            height=700, width=700, node_radius=1, label_text_font_size='10px',
                            colorbar_opts={'width': 500, 'title': 'Pearson correlation'})
-# citrusplotter.plot()
-
+citrusplotter.plot()
+sys.exit()
 
 ### Make the countplot
 splits = {

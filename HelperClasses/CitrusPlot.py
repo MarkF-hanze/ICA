@@ -97,7 +97,9 @@ class CitrusPlot(object):
             if group == 'big':
                 group = 'Sample'
             else:
-                group = f'Subset {group}'
+                #TODO
+                #group = f'Subset {group}'
+                group = f'{group}'
             group_text[df.shape[0] // 2] = group
             df['text'] = group_text
             new_nodes = new_nodes.append(df)
@@ -211,5 +213,6 @@ class CitrusPlot(object):
         ))
         chord.opts(fontscale=self.fontscale)
         chord = chord.redim.range(color=(0, 1))
-        hv.save(chord, f'{self.saver.get_path()}/citrusPlot.png')
+        #hv.save(chord, f'{self.saver.get_path()}/citrusPlot.png')
+        hv.save(chord, f'{self.saver.get_path()}/citrusNormAll-new.png')
 
