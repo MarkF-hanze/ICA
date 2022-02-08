@@ -97,7 +97,7 @@ class CitrusPlot(object):
             if group == 'big':
                 group = 'Sample'
             else:
-    
+
                 group = f'Subset {group}'
                 #group = f'{group}'
             group_text[df.shape[0] // 2] = group
