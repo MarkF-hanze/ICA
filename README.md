@@ -33,7 +33,18 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-Independent component analysis (ICA) is used to disentangle gene expression data into biological pathways. Current implementations of ICA use principal component analysis to drop a percentage of variance of the data to make it computational feasible.  However, the percentage of dropped variance can contain important information about rare cancer types. We propose a solution called divide and conquer. In this research we show that by first using high dimensional data clustering (HDDC) to cluster a dataset, and then running ICA with no dropped variance on each of the clusters, new information is found that was otherwise dropped. HDDC was chosen because it shows a good silhouette score combined with easy-to-understand cluster decisions based on used genes.  Our approach found an estimated source describing a pathway related to a rare form of cancer called mantle cell lymphoma. This estimated source has not been found previously with ICA. Results demonstrate that divide and conquer is capable of finding new pathways that were otherwise missed.  We anticipate our paper to be the starting point in developing a sophisticated divide and conquer approach capable of splitting datasets and using this to find every possible biological pathway present among the samples. 
+Independent component analysis (ICA) is used to disentangle gene expression data into biological pathways.
+Current implementations of ICA use principal component analysis to drop a percentage of variance of the data to
+make it computational feasible. However, the percentage of dropped variance can contain important information
+about rare cancer types. We propose a solution called divide and conquer. In this research we show that by
+first using high dimensional data clustering (HDDC) to cluster a dataset, and then running ICA with no dropped
+variance on each of the clusters, new information is found that was otherwise dropped. HDDC was chosen because
+it shows a good silhouette score combined with easy-to-understand cluster decisions based on used genes. Our
+approach found an estimated source describing a pathway related to a rare form of cancer called mantle cell
+lymphoma. This estimated source has not been found previously with ICA. Results demonstrate that divide and
+conquer is capable of finding new pathways that were otherwise missed. We anticipate our paper to be the starting
+point in developing a sophisticated divide and conquer approach capable of splitting datasets and using this to
+find every possible biological pathway present among the samples
 
 
 This Github page is about the second part of the project, the behaviour of ICA. 2000 random samples of the GPL570 dataset were taken and the behaviour is analysed. The biological interpretation of this algorithm is analysed by running it on the complete GPL570 dataset split by cancer type. 
