@@ -9,6 +9,7 @@ from bokeh.io import export_png, export_svgs
 hv.extension('bokeh')
 pd.set_option('display.max_columns', None)
 
+# Create a citrus plot to see the correlation between different subsets Kwargs is given to the plot function
 class CitrusPlot(object):
     def __init__(self, correlation, line_width_small, line_width_big, saver, node_color_palette=None, fake_amount=1000,
                  fontscale=1, **kwargs):
