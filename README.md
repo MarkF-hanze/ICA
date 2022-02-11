@@ -92,7 +92,7 @@ Jupiter notebook, Python and R should be installed and working before the main s
   * Correlation: Class calculating the correalion between two different dataframes
   * Heatmap: Making the heatmap and calculating different clusters based on this heatmap
   * LoadData: Loading the different datastes with consensus estimated sources.
-
+- /Genesets_To_Function Folder contain the excel and csv files linking GOBP and Reactome genesets to different biological themes. Made by health professionals. 
 
 
 <!-- LICENSE -->
