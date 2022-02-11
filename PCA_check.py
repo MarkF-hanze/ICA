@@ -12,7 +12,7 @@ from Main import Saver
 
 from HelperClasses.CitrusPlot import CitrusPlot
 
-
+# Class to check the difference in normalization tactics between two random splits
 class NormCheck(object):
     def __init__(self, path, name):
         self.path = path
@@ -29,10 +29,6 @@ class NormCheck(object):
 
         self.credibility = {}
         self.load_credibility()
-
-        # print(self.consensus)
-        # print(self.credibility)
-        # print(self.PCA_number)
 
     # Get all components of a single run (This is the PCA count)
     def PCA(self):
@@ -58,6 +54,7 @@ class NormCheck(object):
                 df = pd.read_csv(f'{entry.path}/ica_independent_components_consensus.tsv', sep='\t', index_col=0)
                 self.consensus[self.get_name(entry.path)] = df
 
+    # Load the credibility of each split
     def load_credibility(self):
         for entry in os.scandir(self.path):
             if 'ICARUN' in entry.path:
@@ -67,6 +64,7 @@ class NormCheck(object):
                                          sep='\t', index_col=0)
                         self.credibility[self.get_name(entry.path)] = df
 
+    # Get the ESes
     def merge_consensus(self):
         first_run = True
         for name in self.consensus:
@@ -78,13 +76,15 @@ class NormCheck(object):
             else:
                 self.merged_consensus = self.merged_consensus.join(df)
 
+    # Return merged consensus
     def get_consensus(self):
         return self.merged_consensus
 
+    # Return PCA counts
     def get_counts(self):
         return self.PCA_number, self.consensus, self.credibility
 
-
+# Load the data for the different tactics
 one = NormCheck('/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Normalized_Expiriment/One_Normalized',
                 'One normalization')
 three = NormCheck('/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Normalized_Expiriment/Three_Normalized',
@@ -155,7 +155,6 @@ plot_df['Bar type'] = pd.Categorical(plot_df['Bar type'],
                                       'One normalization sample',  'No normalization sample'])
 plot_df = plot_df.sort_values('Bar type')
 
-#  '#2ecc71'
 colors = ['#641e16', '#c0392b', '#e6b0aa',
           '#1b4f72', '#3498db', '#aed6f1',
           '#186a3b', '#82e0aa']

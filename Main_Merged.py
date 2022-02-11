@@ -9,9 +9,12 @@ from tqdm import tqdm
 from HelperClasses.Correlation import Correlation
 from HelperClasses.LoadData import LoadICARuns
 
-
+# Class to compare different splitting options
 class CompareTactics(object):
     def __init__(self, save_path):
+        '''
+        save_path : str object were to save the results
+        '''
         self.save_path = save_path
         self.directories = None
         # Only compatible with 2,3 and 4 checks
@@ -25,6 +28,7 @@ class CompareTactics(object):
                   'big': '#FF7F00'}
         self.files = {}
 
+    # Load the ica results from the different ICA files
     def load_data(self, directories):
         self.directories = directories
         for directory in self.directories:
@@ -35,6 +39,7 @@ class CompareTactics(object):
             self.files[directory[0]] = {'path': directory[1], 'loader': loader}
             self.files[directory[0]]['correlation'] = Correlation(loader.get_merged_small(), loader.get_sample_data())
 
+    # Get the maximum pearson correlation of every sample ES
     def check_distribution(self):
         fig = plt.figure(constrained_layout=True)
         # Get every point from 0 to 0.9
@@ -57,6 +62,7 @@ class CompareTactics(object):
         plt.savefig(f'{self.save_path}/Pearson_distribution_Cutoff.svg', dpi=300)
         #plt.show()
 
+    # Load the credibility index for the given dataset and test the differences
     def get_credibility(self):
         # Get the big value from a random set
         test = {}
@@ -108,11 +114,9 @@ class CompareTactics(object):
                      palette=self.colors)
         plt.tight_layout()
         plt.savefig('Results/Random_VS_Clustered/Estimated_sources_count.svg', dpi=300)
-        #save_df.to_csv('Results//Random_VS_Clustered/Credibility_distribution_correaltions.csv', index=False)
         print('--------------------------------------------')
         print(save_df)
         print(save_df_1)
-        #save_df_1.to_csv('Results/Random_VS_Clustered/Estimated_sources_count.csv', index=False)
         # Make a dataframe for plotting
         plot_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in plot_df.items()]))
         plot_df = pd.melt(plot_df, value_name='Credibility Index')
@@ -121,6 +125,7 @@ class CompareTactics(object):
         plot_df = plot_df[plot_df['number'] != 'big']
         self.plot_violin_cred(plot_df)
 
+    # Create the violin plot for the correlation distribution
     def plot_violin_cred(self, df):
         plt.clf()
         sns.violinplot(data=df, y='Credibility Index', x='number', hue='tactic', palette=self.colors,
@@ -133,6 +138,7 @@ class CompareTactics(object):
         #plt.show()
         plt.clf()
 
+    # Load the consensus for the given split and return the index
     def get_consensus(self, split):
         _, df, _ = self.files[split]['loader'].get_credibility()
         correlation = self.files[split]['correlation'].get_correlation()
@@ -167,6 +173,7 @@ class CompareTactics(object):
         index = [x for x in index if x not in drop_columns]
         return index
 
+    # Correlation between consensus and correlation to sample distribution (Not used in the report)
     def consensus_vs_correlation(self):
         sns.set(font_scale=1.2, style="whitegrid")
         # Get the sample dataset credibility index (Is the last added dataset)
@@ -202,8 +209,8 @@ class CompareTactics(object):
         #save_df.to_csv('Results/Correlation_vs_Credibility.csv', index=False)
         sns.set(font_scale=1)
 
+    # Test the maximum correlation of the sample set with different splitting methods
     def consensus_big(self):
-        # Test the maximun correlation of the sample set with different splitting methods
         sns.set(font_scale=2.4, style='whitegrid')
         fig = plt.figure(figsize=(15, 5))
         test = {}
@@ -224,7 +231,6 @@ class CompareTactics(object):
                                                                 permutations=100_000)[1]])
         # Save the test results
         save_df = pd.DataFrame(save_df, columns=['Group 1', 'Group 2', 'Welsh p_value'])
-        #save_df.to_csv('Results/Pearson_distribution_test.csv', index=False)
         # Start plotting the distributions in a violine plot
         plot_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in test.items()]))
         plot_df = pd.melt(plot_df, value_name='Pearson correlation')
@@ -234,18 +240,15 @@ class CompareTactics(object):
         plt.title(f"Density plot of highest correlation for every estimated source \n in the sample data")
         plt.xlabel("Number of splits")
         plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-        #plt.show()
         plt.savefig(f'{self.save_path}/Pearson_distribution_KDE.svg', dpi=300, bbox_inches='tight')
-        #
         sns.set(font_scale=1)
 
+    # Significantly test the amount of connections in the citrus plot
     def check_citrus(self):
-        # output_file(filename=f"{save_directory}/citrusPlot.html")
         # Remove diagonal and values smaller than cutoff
         test = {}
         for split in self.directories:
             correlation = self.files[split[0]]['correlation'].get_correlation()
-            #TODO also put this in the other melts
             for i in np.arange(correlation.shape[0]):
                 correlation.iloc[i, i] = np.nan
             # Melt the dataframe to 3 columns
@@ -264,7 +267,6 @@ class CompareTactics(object):
             big['variable'] = big['variable'].str.split('_', expand=True)[1]
             big = big[big['value'] >= .6]
             big = big.groupby(['index', 'variable']).count()
-            #big.to_csv(f'Results/CitrusCount_{split}.csv', index=True)
             print(big)
         checking = [['2_Clustered', '2_Random'], ['3_Clustered', '3_Random'], ['4_Clustered', '4_Random']]
         save_df = []
@@ -273,7 +275,6 @@ class CompareTactics(object):
             save_df.append([check[0], check[1], stats.fisher_exact(table, alternative='less')[1]])
         save_df = pd.DataFrame(save_df, columns=['Group 1', 'Group 2', 'Fisher exact p_value'])
         print(save_df)
-        #save_df.to_csv('Results/CitrusCheck.csv', index=False)
 
 
 if __name__ == "__main__":
@@ -286,6 +287,7 @@ if __name__ == "__main__":
                    ('3_Random', '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/Random_Splits/3_Split'),
                    ('4_Random', '/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Clustered_vs_Random_Experiment/Random_Splits/4_Split')
                    ]
+    # Run all the different statistical checks on the directories loaded
     compare.load_data(directories)
     compare.check_citrus()
     compare.get_credibility()
