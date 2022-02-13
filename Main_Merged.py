@@ -9,12 +9,16 @@ from tqdm import tqdm
 from HelperClasses.Correlation import Correlation
 from HelperClasses.LoadData import LoadICARuns
 
-# Class to compare different splitting options
+
 class CompareTactics(object):
+    """
+    Class to compare different splitting options
+    """
     def __init__(self, save_path):
-        '''
-        save_path : str object were to save the results
-        '''
+        """
+        input variables:
+            save_path str object were to save the results
+        """
         self.save_path = save_path
         self.directories = None
         # Only compatible with 2,3 and 4 checks
@@ -28,8 +32,12 @@ class CompareTactics(object):
                   'big': '#FF7F00'}
         self.files = {}
 
-    # Load the ica results from the different ICA files
     def load_data(self, directories):
+        """
+        Load the ica results from the different ICA files
+        input variables:
+            directories list of str of what ESes to load
+        """
         self.directories = directories
         for directory in self.directories:
             loader = LoadICARuns(
@@ -39,8 +47,10 @@ class CompareTactics(object):
             self.files[directory[0]] = {'path': directory[1], 'loader': loader}
             self.files[directory[0]]['correlation'] = Correlation(loader.get_merged_small(), loader.get_sample_data())
 
-    # Get the maximum pearson correlation of every sample ES
     def check_distribution(self):
+        """
+        Get the maximum pearson correlation of every sample ES with the subset ES and plot the distribution
+        """
         fig = plt.figure(constrained_layout=True)
         # Get every point from 0 to 0.9
         xs = np.linspace(0.0, 0.9, 10)
@@ -62,8 +72,10 @@ class CompareTactics(object):
         plt.savefig(f'{self.save_path}/Pearson_distribution_Cutoff.svg', dpi=300)
         #plt.show()
 
-    # Load the credibility index for the given dataset and test the differences
     def get_credibility(self):
+        """
+        Load the credibility index for the given dataset and test the differences statistically
+        """
         # Get the big value from a random set
         test = {}
         small_df, df_big, sets = self.files['2_Clustered']['loader'].get_credibility()
@@ -125,8 +137,10 @@ class CompareTactics(object):
         plot_df = plot_df[plot_df['number'] != 'big']
         self.plot_violin_cred(plot_df)
 
-    # Create the violin plot for the correlation distribution
     def plot_violin_cred(self, df):
+        """
+        Create the violin plot for the correlation distribution
+        """
         plt.clf()
         sns.violinplot(data=df, y='Credibility Index', x='number', hue='tactic', palette=self.colors,
                        cut=0, split=True)
@@ -138,8 +152,14 @@ class CompareTactics(object):
         #plt.show()
         plt.clf()
 
-    # Load the consensus for the given split and return the index
     def get_consensus(self, split):
+        """
+        If multiple of the same ESes appear in multiple splits only take 1 based on the higher credibility
+        input variables:
+            split which split to load for the consensus
+        returns:
+            index consensus of the multiple splits
+        """
         _, df, _ = self.files[split]['loader'].get_credibility()
         correlation = self.files[split]['correlation'].get_correlation()
         # All small components
@@ -173,8 +193,10 @@ class CompareTactics(object):
         index = [x for x in index if x not in drop_columns]
         return index
 
-    # Correlation between consensus and correlation to sample distribution (Not used in the report)
     def consensus_vs_correlation(self):
+        """
+        Correlation between consensus and correlation to sample distribution (Not used in the report)
+        """
         sns.set(font_scale=1.2, style="whitegrid")
         # Get the sample dataset credibility index (Is the last added dataset)
         end_df, _, _ = self.files['2_Clustered']['loader'].get_credibility()
@@ -209,8 +231,10 @@ class CompareTactics(object):
         #save_df.to_csv('Results/Correlation_vs_Credibility.csv', index=False)
         sns.set(font_scale=1)
 
-    # Test the maximum correlation of the sample set with different splitting methods
     def consensus_big(self):
+        """
+        Test the maximum correlation distribution of the sample set with different splitting methods (T-Test)
+        """
         sns.set(font_scale=2.4, style='whitegrid')
         fig = plt.figure(figsize=(15, 5))
         test = {}
@@ -243,8 +267,10 @@ class CompareTactics(object):
         plt.savefig(f'{self.save_path}/Pearson_distribution_KDE.svg', dpi=300, bbox_inches='tight')
         sns.set(font_scale=1)
 
-    # Significantly test the amount of connections in the citrus plot
     def check_citrus(self):
+        """
+        Significantly test the amount of connections in the citrus plot
+        """
         # Remove diagonal and values smaller than cutoff
         test = {}
         for split in self.directories:

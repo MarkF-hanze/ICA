@@ -7,16 +7,31 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import itertools
 
-# Make histograms to analyse the correlation between ES
+
 class Histogram(object):
     def __init__(self, custom_colors, saver):
+        """
+        Make histograms to analyse the correlation between ES
+
+        input variables:
+            custom_colors: dict containing html colors for the Subsets
+            saver: saver Class to save the results
+        """
         self.custom_colors = custom_colors
         self.used_colors = 0
         self.saver = saver
 
-    # Remove correlations between ESes that are not needed for this analysis
     @staticmethod
     def clean_correlation(correlation, col_names):
+        """
+        Remove correlations between ESes that are not needed for this analysis
+
+        input variables:
+            correlation: DataFrame containing the correlations between all ESes
+            col_names: list containing the names of the to be kept ESes
+        returns:
+            subset_cor:  Dictionary containing the cleaned correlations with set names
+        """
         # Get the correlations and melt it
         subset_cor = correlation.loc[col_names, col_names]
         subset_cor = subset_cor.reset_index().melt(id_vars='index')
@@ -35,9 +50,16 @@ class Histogram(object):
         subset_cor['name2'] = np.arange(0, subset_cor.shape[0])
         return subset_cor
 
-    # Start the figures empty
     @staticmethod
     def init_figures(amount):
+        """
+        Start the a matplotlib canvas with a set number of figures
+
+        input variables:
+            amount: int Number of figures needed
+        returns:
+            fix,axs: matplotlib variables containing the figures and the subplots
+        """
         # Get the amount of rows and cols for a square plot
         rows = round(np.sqrt(amount))
         cols = round(np.sqrt(amount))
@@ -52,6 +74,14 @@ class Histogram(object):
 
     # Generate colors
     def set_colors(self, subset_cor):
+        """
+        Generate colors for subset cor
+
+        input variables:
+            subset_cor: Dictionary containing the cleaned correlations with set names
+        return:
+            colors: Dictionary containing the unique subsets with the generated colors
+        """
         # Make the color bars
         colors = [[], []]
         # The used colormap
@@ -69,8 +99,15 @@ class Histogram(object):
                 colors[q].append(self.custom_colors[split])
         return colors
 
-    # Create the labels for the figure
     def update_layout(self, fig, axs):
+        """
+         Create the labels and the layout of the figure
+
+         input variables:
+            fix,axs: matplotlib variables containing the figures and the subplots
+         return:
+            fix,axs: matplotlib variables containing the figures and the subplots (with added layout)
+         """
         # Remove x tick labels
         for ax in range(len(axs.ravel())):
             axs.ravel()[ax].set_xticks([])
@@ -86,8 +123,15 @@ class Histogram(object):
         plt.ylabel("Pearsons correlation")
         return fig, axs
 
-    # Make the figure
     def plot(self, plot_columns, correlation, name):
+        """
+         Complete plot the scores in different bar plots
+
+         input variables:
+            plot_columns: list of lists of columns to make a single barplot
+            correlation: DataFrame of correlations between plot_columns
+            name: str Name of the file to save in Saver path
+         """
         fig, axs = self.init_figures(len(plot_columns))
         # Start looping the to be plotted columns
         for z, col_names in enumerate(plot_columns):
@@ -106,9 +150,15 @@ class Histogram(object):
     def get_colormap(self):
         return self.custom_colors
 
-# Get the interesting sources (High correlation between subsets low with the sample)
+
 class MergeTwo(object):
     def __init__(self, correlation):
+        """
+         Get the interesting sources (High correlation between subsets low with the sample)
+
+         input variables:
+            correlation: DataFrame of correlations between ESes
+        """
         self.original_cor = correlation.copy()
         self.correlation = correlation.copy()
         self._pivot_correlation()
@@ -121,8 +171,10 @@ class MergeTwo(object):
         }
         self._get_scores()
 
-    # Get the correlation df in correct format
     def _pivot_correlation(self):
+        """
+        Get the correlation DataFrame in the correct format
+        """
         # Melt to reduce it to two columns
         self.correlation = self.correlation.reset_index().melt(id_vars='index').dropna()
         # Remove the big component from 1 column
@@ -139,8 +191,10 @@ class MergeTwo(object):
         self.correlation = self.correlation[
             self.correlation.groupby(['index', 'group 2'])['value'].transform(max) == self.correlation['value']]
 
-    # Create the scores
     def _get_scores(self):
+        """
+        Create the scores between ESes
+        """
         # Loop over every component except the one in big
         for component, comp_df in self.correlation.groupby('index'):
             # Get the highest big component correlation
@@ -162,8 +216,14 @@ class MergeTwo(object):
                 self.original_cor.loc[self.best_scores['Small Component'][-1], self.best_scores['Small2 Component'][-1]]
                 - self.original_cor.loc[self.best_scores['Small Component'][-1], self.best_scores['Big Component'][-1]])
 
-    # Make the histogram figure
     def plot(self, plotter, plot_cutoff):
+        """
+        Make the histogram figure of the final score
+
+        input variables:
+            plotter: Class containing information about the histogram
+            plot_cutoff: Float Only bar plots with a score higher than plot_cutoff are plotted (between 0 and 1)
+        """
         # Turn best scores to a dataframe
         plot_df = pd.DataFrame.from_dict(self.best_scores, orient='index').transpose().sort_values(by='Score',
                                                                                                    ascending=False)
@@ -171,22 +231,27 @@ class MergeTwo(object):
         plot_df = plot_df.loc[
             pd.DataFrame(np.sort(plot_df[['Small Component', 'Small2 Component']], 1),
                          index=plot_df.index).drop_duplicates(keep='first').index]
-        # TODO save file
-        # df.to_csv(f'{save_directory}/Biological_int.csv')
         # Only plot the histograms with score bigger than cutoff
         # Set it in a list of list for the histogram
         plot_columns = plot_df[plot_df['Score'] > plot_cutoff].drop('Score', axis=1).iloc[:].values
         plotter.plot(plot_columns, self.original_cor, 'Biological_int')
 
-# Get the interesting sources and linearly combine them.
+
 class BigSmall(object):
     def __init__(self, correlation):
+        """
+        Get the interesting sources (ESes in different sets with high correlation).
+         input variables:
+            correlation: DataFrame of correlations between ESes
+        """
         self.correlation = correlation.copy()
         self.big_correlation = correlation.copy()
         self._pivot_correlation()
 
-    # Get the correlation in the correct format
     def _pivot_correlation(self):
+        """
+        Get the correlation in the correct format
+        """
         self.big_correlation[self.big_correlation < 0.6] = np.nan
         # Get the components that are both in the big group and have a correlation with at least 1 small component
         # Only leave components that correlate with at least 2 others (bigger than 2 because it also correlated with
@@ -194,15 +259,23 @@ class BigSmall(object):
         self.subset = self.big_correlation.count(axis=1)
         self.subset = self.subset[self.subset > 2]
 
-    # Only get the big components
     def _get_big_components(self):
+        """
+        Only get the big ESes out of a set of columns
+        """
         big_components = [i for i in self.big_correlation.columns if "big" in i]
         # Get the components in big and have a correlation of 0.6 with 2 components
         loop = set(big_components).intersection(set(self.subset.index))
         return loop
 
-    # Pivot the correlations
     def _make_component_df(self, component):
+        """
+        Pivot the correlations
+        input variables:
+            component: str big ES that the component dataframe is calculated based on
+        return:
+            component_df: Dataframe containing the highly correlated ESes in different sets from component
+        """
         # Get the big source and the highly correlated sources and drop the big component
         component_df = pd.DataFrame(self.big_correlation.loc[component].dropna().drop(component))
         # Make a column against what group the correlation is
@@ -212,17 +285,29 @@ class BigSmall(object):
         component_df = component_df[component_df["Group"] != component.split("_")[-1]]
         return component_df
 
-    # Get all how often a single group appears
     @staticmethod
     def multiple_reconstructed(df):
+        """
+        Get  how many variables can be combined with a correlation higher than 0.6 with subsets ESes
+        input variables:
+            df: Dataframe containing the highly correlated ESes in different sets from component
+        return:
+            True/False based on if the sample ESes correlated with more than 1 different subsets
+        """
         counts = df.groupby("Group").count()
         # Do some groups appear mutliple times?
         counts = counts[counts.iloc[:, 0] >= 2]
         # Return true if it is multiple connected
         return len(counts) > 0
 
-    # Combine multiple reconstructed components
     def get_combinations(self, component_df):
+        """
+        Combine multiple reconstructed components and get all combinations of the ESes (get the pairs)
+        input variables:
+            component_df:  Dataframe containing the highly correlated ESes in different sets from component
+        return:
+            all_combinations List of lists of all possible linear combinations of the ESes
+        """
         # Look if there are multiple correlations coming from 1 set
         if self.multiple_reconstructed(component_df):
             # If this is the case get all possible combinations of 2 sets
@@ -236,20 +321,38 @@ class BigSmall(object):
             all_combinations = [list(component_df.index)]
         return all_combinations
 
-    # Get the small ES
     @staticmethod
     def get_small_cor(component_df, small_components):
+        """
+        Only get the small ESes correlations and take the mean distance
+            input variables:
+                component_df:  Dataframe containing the highly correlated ESes in different sets from component
+                small_components: Subset ESes which to check the correlation for
+            return:
+                The mean correlations between the small_components
+        """
         return component_df.loc[small_components, :].drop("Group", axis=1).mean()
 
-    # Get the correlation between mutliple ES (Pairs)
     def correlation_pairs(self, pairs):
+        """
+        Get the correlation between two ES (Pairs)
+            input variables:
+                pairs: Two ESes which to calculate the correlation between
+            return:
+                The mean correlations between all pairs
+        """
         correlation_values = []
         for pair in pairs:
             correlation_values.append(self.correlation.loc[pair[0], pair[1]])
         return correlation_values
 
-    # Add components together and calculate the distance correlation with the sample ESes
     def create_scores(self):
+        """
+        Add components together and calculate the distance correlation sample ESes. Check if the mean between small
+        pairs is bigger than the distance to the sample ES
+            return:
+                Sorted dictionary of all the resulting scores
+        """
         # Dictionaries to save the results
         data = {}
         end_results = {}
@@ -282,7 +385,12 @@ class BigSmall(object):
 
     # Plot to see if the new correlation is higher
     def plot(self, plotter):
+        """
+        Plot the generated scores
+            input variables:
+                plotter: Class containing information about the histogram
+        """
         # Dictionaries to save the results
         input_figure = self.create_scores()
-        #pd.DataFrame(input_figure).to_csv(f'{save_directory}/EC_splitted.csv')
-        plotter.plot(input_figure, self.correlation,'EC_splitted')
+        # pd.DataFrame(input_figure).to_csv(f'{save_directory}/EC_splitted.csv')
+        plotter.plot(input_figure, self.correlation, 'EC_splitted')

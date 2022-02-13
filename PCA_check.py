@@ -12,9 +12,17 @@ from Main import Saver
 
 from HelperClasses.CitrusPlot import CitrusPlot
 
-# Class to check the difference in normalization tactics between two random splits
+
 class NormCheck(object):
+    """
+    Class to check the difference in normalization tactics between two random splits
+    """
     def __init__(self, path, name):
+        """
+        Input variables:
+            path: str path to save the results
+            name: name of the plots
+        """
         self.path = path
         self.PCA_number = None
         self.global_name = name
@@ -30,8 +38,10 @@ class NormCheck(object):
         self.credibility = {}
         self.load_credibility()
 
-    # Get all components of a single run (This is the PCA count)
     def PCA(self):
+        """
+        Get all components of a single run (This is the PCA count)
+        """
         for entry in os.scandir(self.path):
             if 'ICARUN' in entry.path:
                 shapes = []
@@ -47,15 +57,19 @@ class NormCheck(object):
     def get_name(string):
         return string.split('/')[-1].replace('ICARUN_', '').replace('_', '')
 
-    # Load the consensus of each split
     def load_consensus(self):
+        """
+        Load the consensus of each split
+        """
         for entry in os.scandir(self.path):
             if 'ICARUN' in entry.path:
                 df = pd.read_csv(f'{entry.path}/ica_independent_components_consensus.tsv', sep='\t', index_col=0)
                 self.consensus[self.get_name(entry.path)] = df
 
-    # Load the credibility of each split
     def load_credibility(self):
+        """
+        Load the credibility of each split
+        """
         for entry in os.scandir(self.path):
             if 'ICARUN' in entry.path:
                 for file in os.scandir(entry):
@@ -64,8 +78,10 @@ class NormCheck(object):
                                          sep='\t', index_col=0)
                         self.credibility[self.get_name(entry.path)] = df
 
-    # Get the ESes
     def merge_consensus(self):
+        """
+        Merge all the ESes to one single dataframe
+        """
         first_run = True
         for name in self.consensus:
             df = self.consensus[name].copy()
@@ -91,7 +107,7 @@ three = NormCheck('/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Nor
                   'Three normalizations')
 none = NormCheck('/home/MarkF/DivideConquer/Results/2000_Samples_Experiment/Normalized_Expiriment/Non_Normalized',
                  'No normalization')
-### Making the citrusplots
+### Making the citrusplots to get the same ESes
 df = one.get_consensus()
 df = df.join(three.get_consensus())
 df = df.join(none.get_consensus())

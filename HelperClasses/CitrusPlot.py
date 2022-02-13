@@ -9,10 +9,24 @@ from bokeh.io import export_png, export_svgs
 hv.extension('bokeh')
 pd.set_option('display.max_columns', None)
 
-# Create a citrus plot to see the correlation between different subsets Kwargs is given to the plot function
+
 class CitrusPlot(object):
+    """
+    Create a citrus plot to see the correlation between different subsets ESes.
+    """
     def __init__(self, correlation, line_width_small, line_width_big, saver, node_color_palette=None, fake_amount=1000,
                  fontscale=1, **kwargs):
+        """
+        input variables:
+            correlation: DataFrame containing all the different correlation scores between ESes.
+            line_width_small: float line width of the lines that have a lower correlation than 0.6
+            line_width_big: float line width of the lines that have a higher correlation than 0.6
+            saver: Class of were to save the output plot
+            node_color_palette dictionary of the colors used for the node groups
+            fake_amount int amount of empty nodes between groups
+            fontscale: Font of the colorbar
+            **kwargs: Optional parameters for the holoview plotter object
+        """
         self.fontscale = fontscale
         # Make all the variables global
         self.saver = saver
@@ -49,7 +63,9 @@ class CitrusPlot(object):
         # Set all the nodes to have the same line width
 
     def _create_color_palette_lines(self):
-        # Make until 0.6 grey and the rest a shade of blue
+        """
+         Create the color pallet for the lines (Make until 0.6 grey and the rest a shade of blue)
+        """
         # Get the greys
         size = len(list(self.color_palette_high))
         self.color_pallet_lines = list(np.repeat(self.color_palette_low, round((size / 4) * 6)).tolist())
@@ -57,6 +73,9 @@ class CitrusPlot(object):
         self.color_pallet_lines.extend(list(Blues256)[::-1])
 
     def _create_lines(self):
+        """
+         Create the dataframe containing the information for the different lines
+        """
         # Melt the dataframe to 3 columns
         self.lines = self.correlation.reset_index().melt(id_vars='index').dropna()
         # Drop the duplicates that like ab ba because correlation was mirrored
@@ -79,6 +98,9 @@ class CitrusPlot(object):
         self.lines = self.lines.sort_values('color')
 
     def _create_nodes(self):
+        """
+        Create the dataframe containing the information for the different nodes
+        """
         # Create a node for every component
         self.nodes = pd.DataFrame()
         self.nodes['Components'] = self.correlation.columns
@@ -93,6 +115,7 @@ class CitrusPlot(object):
         # Add text to every middle value
         # Loop over every group and add text to the middle node
         new_nodes = pd.DataFrame()
+        # Change the names
         for group, df in self.nodes.groupby('Group'):
             group_text = list(np.repeat('', df.shape[0]))
             if group == 'big':
@@ -100,13 +123,15 @@ class CitrusPlot(object):
             else:
 
                 group = f'Subset {group}'
-                #group = f'{group}'
             group_text[df.shape[0] // 2] = group
             df['text'] = group_text
             new_nodes = new_nodes.append(df)
         self.nodes = new_nodes
 
     def get_score_nodes(self, above_cutoff):
+        """
+        Create the scores for the different nodes (used for sorting high and low scoring nodes together)
+        """
         score = self.lines.copy()[['index', 'variable', 'value']]
         # Count how often high and low correlations occur for every point
         if above_cutoff:
@@ -124,6 +149,11 @@ class CitrusPlot(object):
         self.nodes = pd.merge(left=self.nodes, right=score, left_on='Components', right_on='Components')
 
     def remove_lines(self, cutoff):
+        """
+        Remove lines that have a correlation strength of smaller than cutoff (Used to speed up the plotting)
+        input variables:
+            cutoff float lines that have a correlation lower than cutoff are not plotted
+        """
         # Remove lines that have a correlation strength of smaller than cutoff
         all_nodes = set(self.lines[['index', 'variable']].values.ravel())
         self.lines = self.lines[self.lines['value'] > cutoff]
@@ -134,6 +164,11 @@ class CitrusPlot(object):
         self.create_fake_lines(list(missing_nodes))
 
     def create_fake_lines(self, nodes):
+        """
+        Creates a  (white) line for every node because otherwise it is not plotted
+            input variables:
+                node list of nodes that need a line
+        """
         group_length = self.correlation.columns
         group_length = [x.split('_')[1] for x in group_length]
         group_length = len(set(group_length)) - 1
@@ -165,6 +200,9 @@ class CitrusPlot(object):
             self.lines = self.lines.append(row, ignore_index=True)
 
     def _create_fake_nodes(self):
+        """
+        Creates (white) nodes between groups for ascetics
+        """
         new_nodes = pd.DataFrame()
         all_fakes = pd.DataFrame()
         i = 0
@@ -185,6 +223,9 @@ class CitrusPlot(object):
         self.create_fake_lines(all_fakes['Components'].values)
 
     def _create_color_palette_nodes(self):
+        """
+        Creates colors for every group not already in node_color_palette
+        """
         i = len(self.node_color_palette)
         # Give every group without a color a color
         for group in self.nodes.Group.unique():
@@ -200,6 +241,9 @@ class CitrusPlot(object):
 
 
     def plot(self):
+        """
+        Make the citrus plot and save it in the class Saver path
+        """
         # Make nodes a holoview object
         nodes = hv.Dataset(self.nodes, 'Components', ['Group', 'node_color', 'text'])
         # Make chord

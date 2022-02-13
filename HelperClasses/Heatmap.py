@@ -9,7 +9,16 @@ import itertools
 import matplotlib.pyplot as plt
 
 class Heatmap(object):
+    """
+    Class that computes the clusters of the same ESes between subsets
+    """
     def __init__(self, correlation, cut_off, saver):
+        """
+        input variables:
+            correlation: DataFrame containing the correlation between ESes
+            cut_off: float value between 0-1 when are two ESes classified 'the same'
+            saver: Class of were to save the output files
+        """
         self.saver = saver
         self.clusters = []
         # Make variables
@@ -22,10 +31,18 @@ class Heatmap(object):
         self.col_order = self.make_linkage()
 
     def transform_correlation(self):
+        """
+        Transform the dataframe to only contains 0-1 based on the cutoff
+        """
         self.one_zero_correlation[self.one_zero_correlation < self.cut_off] = 0
         self.one_zero_correlation[self.one_zero_correlation >= self.cut_off] = 1
 
     def make_linkage(self):
+        """
+        Create linkage between columns and rows for better visuals
+        return:
+            cols: list of order for the columns resulting from the linkage
+        """
         # Get the values with more then 1 value to make it faster clustering with only 1 value doesnt make sense
         linkage_df = self.one_zero_correlation.sum()
         linkage_df = linkage_df[linkage_df > 1]
@@ -40,6 +57,9 @@ class Heatmap(object):
         return cols
 
     def plot(self):
+        """
+        Create the heatmap and save it at Saver location
+        """
         df = self.one_zero_correlation.loc[self.col_order, self.col_order]
         df = df.iloc[:100, :100]
         # Color pallet
@@ -72,7 +92,7 @@ class Heatmap(object):
 
     def make_clusters(self):
         """
-        Insert correlation matrix with only 0 and 1 with a certain cutoff
+        Insert correlation matrix with only 0 and 1 with a certain cutoff and create clusters of the same ES
         """
         df = self.one_zero_correlation.copy()
         # Get every component that can be clustered
@@ -101,7 +121,16 @@ class Heatmap(object):
     def do_nothing(self, vector):
         return vector
 
-    def get_original_distance(self,big_comp, small_components):
+    def get_original_distance(self, big_comp, small_components):
+        """
+        Calculate the distance correlation between the big component and all the small components
+        input variables:
+            big comp: str Big ES
+            small_components: list of str all Sample ES where the distance correaltion between big_comp needs to be
+                              checked
+        returns:
+            maximum distance correlation between big comp and small components
+        """
         distance = 0
         # Get all the original distances from small to big
         for component in small_components:
@@ -112,6 +141,15 @@ class Heatmap(object):
         return distance
 
     def get_new_distances(self, big_comp, small_components):
+        """
+        Calculate the distance correlation between the big component and all the linear combination of small components
+        input variables:
+            big comp: str Big ES
+            small_components: list of str all Sample ES where the distance correlation between big_comp needs to be
+                              checked
+        returns:
+            maximum distance correlation between big comp and all linear combinations of small components
+        """
         distance = 0
         # Make every combination of adding or subtracting
         operations = (self.do_nothing, self.make_negative)
@@ -129,6 +167,10 @@ class Heatmap(object):
         return distance
 
     def merge_clusters(self, df):
+        """
+        Check if the correlation goes up when linearly combining ESes compared to stand alone ESes
+            df: DataFrame containing all the sources
+        """
         xs = []
         ys = []
         # Get the amount of small sets in the estimated sources
@@ -165,6 +207,11 @@ class Heatmap(object):
         self.plot_merged(xs, ys)
 
     def plot_merged(self, xs, ys):
+        """
+        Plot to check if the correlation goes up when linearly combining ESes compared to stand alone ESes
+            xs: Old scores
+            ys: New scores
+        """
         # Make the scatter plot
         plt.clf()
         plt.scatter(xs, ys, marker="+", color="blue")

@@ -14,7 +14,14 @@ hv.extension('bokeh')
 
 
 class Saver(object):
+    """
+    Class containing the path to save the results
+    """
     def __init__(self, path):
+        """
+       input variables:
+            path: str to save the results
+        """
         self.path = path
 
     def get_path(self):
@@ -72,7 +79,7 @@ if __name__ == "__main__":
     for z in plotter.get_colormap():
         rgb = tuple([int(x * 255) for x in plotter.get_colormap()[z]])
         color_mapper_html[z] = '#%02x%02x%02x' % rgb[:3]
-
+    # Make the citrus plot
     citrusplotter = CitrusPlot(correlation.get_correlation(),
                                node_color_palette=node_pallete,
                                line_width_small=1, line_width_big=9, fake_amount=1000,
